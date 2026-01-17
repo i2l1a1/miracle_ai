@@ -1,7 +1,9 @@
+import Filter from "@/components/filter/filter";
+
 export default function HomePage() {
     return (
         <>
-            This is a home page.
+            <Filter/>
         </>
     );
 }
