@@ -14,15 +14,22 @@
     --color-user-icon-green: #2C5858;
     --color-user-icon-purple: #542C59;
     --color-user-icon-blue: #2C3859;
+
+    --text-logo: 21px;
+    --text-main-text: 15px;
+    --text-button-text: 14px;
+    --text-question-header: 18px;
+    --text-block-header: 22px;
+    --text-welcome-label: 32px;
+
+    --font-weight-regular: 400;
+    --font-weight-bold: 700;
 }
 
 body {
     margin: 0;
     background-color: var(--color-background);
     color: var(--color-text);
-}
-
-
-h1 {
-    font-size: 30px;
+    font-size: var(--text-main-text);
+    font-weight: var(--font-weight-regular);
 }
