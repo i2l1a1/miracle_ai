@@ -38,3 +38,5 @@ backend/__pycache__/
 .DS_Store
 */.env*
 */.idea
+**/__pycache__/
+*.pyc
