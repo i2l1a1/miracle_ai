@@ -9,7 +9,7 @@ class QuestionSchema(BaseModel):
     title: str
     text: str
     tags: Optional[List[str]] = None
-    # date_added: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    date_added: Optional[datetime] = None
     status: str = Field(default="Answered by AI")
 
     model_config = {"from_attributes": True}
