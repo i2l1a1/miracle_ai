@@ -13,3 +13,8 @@ class QuestionSchema(BaseModel):
     status: str = Field(default="Answered by AI")
 
     model_config = {"from_attributes": True}
+
+
+class UserCreateSchema(BaseModel):
+    username: str
+    password: str

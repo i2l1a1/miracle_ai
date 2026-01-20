@@ -4,8 +4,6 @@ import UserAvatar from "@/public/icons/user-green.svg"
 import Tag from "@/components/tags/Tag";
 
 export default function HomePageQuestion({question}: { question: HomePageQuestionType }) {
-    console.log(question);
-
     const formattedDateAdded = new Intl.DateTimeFormat("en-US", {
         dateStyle: "short",
         timeStyle: "short",
