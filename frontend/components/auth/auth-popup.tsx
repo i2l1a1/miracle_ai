@@ -6,11 +6,9 @@ import {momoTrustDisplay} from "@/app/fonts";
 import SingleLineInputField from "@/components/input/single-line-input-field";
 import AuthButtonBig from "@/components/buttons/auth-button-big";
 import {FormEvent, useState, useEffect} from "react";
-import {useRouter} from "next/navigation";
 import {useAuth} from "@/context/AuthContext";
 
 export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }) {
-    const router = useRouter();
     const {setUsername: setAuthUsername} = useAuth();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -60,7 +58,7 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
     };
 
     const handleLogin = async (event?: FormEvent<HTMLFormElement>) => {
-        event?.preventDefault(); // Предотвращаем дефолтное поведение только если event передан
+        event?.preventDefault();
         if (!validateForm()) return;
         setError("");
 

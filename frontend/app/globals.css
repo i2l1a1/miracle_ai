@@ -27,6 +27,14 @@
     --spacing-content-horizontal: 16px;
 }
 
+@layer utilities {
+    .bg-blur-background {
+        background-color: var(--color-blur-background);
+        -webkit-backdrop-filter: blur(15px);
+        backdrop-filter: blur(15px);
+    }
+}
+
 body {
     padding-left: var(--spacing-content-horizontal);
     padding-right: var(--spacing-content-horizontal);

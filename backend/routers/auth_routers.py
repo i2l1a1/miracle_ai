@@ -54,12 +54,6 @@ async def verify_user_token(current_user: User = Depends(get_current_user)):
     return {"message": "Token is valid", "username": current_user.username}
 
 
-@auth_router.get("/items")
-async def read_items(current_user: User = Depends(get_current_user)):
-    return {"message": f"Hello {current_user.username}! Here are some protected items.",
-            "items": ["item1", "item2", "item3"]}
-
-
 @auth_router.post("/logout")
 async def logout(response: Response):
     response.delete_cookie(key="access_token")
