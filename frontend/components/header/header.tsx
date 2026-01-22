@@ -3,7 +3,7 @@
 import AuthButtonSmall from "@/components/buttons/auth-button-small";
 import Logo from "@/components/logo/logo";
 import SidebarButton from "@/components/buttons/sidebar-button";
-import {useState} from "react";
+import {useState, useRef} from "react";
 import AuthPopup from "@/components/auth/auth-popup";
 import UserAvatar from "@/public/icons/user-green.svg"
 import Image from "next/image";
@@ -14,6 +14,7 @@ export default function Header() {
     const [showAuth, setShowAuth] = useState(false);
     const {username, loading} = useAuth();
     const [showAccountMenu, setShowAccountMenu] = useState(false);
+    const avatarRef = useRef<HTMLImageElement>(null);
 
     return (
         <div className="sticky top-0 z-20 border-b border-separator h-16 -mx-4 box-border">
@@ -26,13 +27,13 @@ export default function Header() {
                 {loading ? (
                     <div className="w-9 h-9 mr-4 bg-separator rounded-full animate-pulse"></div>
                 ) : username ? (
-                    <Image src={UserAvatar} alt="User Avatar" className="cursor-pointer mr-4"
+                    <Image src={UserAvatar} alt="User Avatar" className="cursor-pointer mr-4" ref={avatarRef}
                            onClick={() => setShowAccountMenu(!showAccountMenu)}/>
                 ) : (
                     <AuthButtonSmall onClick={() => setShowAuth(true)}/>
                 )}
             </div>
-            {showAccountMenu && <AccountMenu onClose={() => setShowAccountMenu(false)}/>}
+            {showAccountMenu && <AccountMenu onClose={() => setShowAccountMenu(false)} triggerRef={avatarRef}/>}
             {showAuth && <AuthPopup onCloseAction={() => setShowAuth(false)}/>}
         </div>
     );
