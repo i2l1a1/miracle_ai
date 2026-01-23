@@ -1,7 +1,7 @@
 "use client"
 
 import AuthButtonSmall from "@/components/buttons/auth-button-small";
-import {useState, useRef} from "react";
+import {useState, useRef, useEffect} from "react";
 import AuthPopup from "@/components/auth/auth-popup";
 import UserAvatar from "@/public/icons/user-green.svg"
 import Image from "next/image";
@@ -16,6 +16,14 @@ export default function Header() {
     const [showAccountMenu, setShowAccountMenu] = useState(false);
     const [showSidebar, setShowSidebar] = useState(false);
     const avatarRef = useRef<HTMLImageElement>(null);
+
+    useEffect(() => {
+        if (showSidebar) {
+            document.body.classList.add("overflow-hidden");
+        } else {
+            document.body.classList.remove("overflow-hidden");
+        }
+    }, [showSidebar]);
 
     return (
         <div className="sticky top-0 z-20 border-b border-separator h-16 -mx-4 box-border">
