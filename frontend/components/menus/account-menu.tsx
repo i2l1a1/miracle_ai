@@ -26,9 +26,6 @@ export default function AccountMenu({onClose, triggerRef}: {
         };
 
         document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
     }, [menuRef, triggerRef, onClose]);
 
     const handleLogout = async () => {

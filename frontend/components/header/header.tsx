@@ -29,7 +29,7 @@ export default function Header() {
         <div className="sticky top-0 z-20 border-b border-separator h-16 -mx-4 box-border">
             <div
                 className="flex items-center justify-between h-full py-[10px] bg-blur-background">
-                <SidebarButtonAndLogo onSidebarButtonClick={() => setShowSidebar(!showSidebar)}/>
+                <SidebarButtonAndLogo onSidebarButtonClick={() => setShowSidebar(true)}/>
                 {loading ? (
                     <div className="w-9 h-9 mr-4 bg-separator rounded-full animate-pulse"></div>
                 ) : username ? (
@@ -40,7 +40,7 @@ export default function Header() {
                 )}
             </div>
             {showAccountMenu && <AccountMenu onClose={() => setShowAccountMenu(false)} triggerRef={avatarRef}/>}
-            {showSidebar && <Sidebar onSidebarButtonClick={() => setShowSidebar(!showSidebar)}/>}
+            {showSidebar && <Sidebar onClose={() => setShowSidebar(false)}/>}
             {showAuth && <AuthPopup onCloseAction={() => setShowAuth(false)}/>}
         </div>
     );
