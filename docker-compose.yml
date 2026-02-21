@@ -1,12 +1,30 @@
 services:
   db:
-    image: postgres:13
+    image: postgres:18
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql
     env_file:
       - ./backend/.env
     ports:
       - "5432:5432"
+  sever:
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+    stdin_open: true
+    tty: true
+    depends_on:
+      - sever
 
 volumes:
   postgres_data:
