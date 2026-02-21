@@ -2,9 +2,10 @@ import Filter from "@/components/filter/filter";
 import HomePageQuestion from "@/components/questions/HomePageQuestion";
 import {HomePageQuestionType} from "@/app/home/types";
 import {fetchData} from "@/lib/dataService";
+import {SERVER_API_URL} from "@/lib/apiConfig";
 
 export default async function HomePage() {
-    const questions = await fetchData("http://localhost:8080/all_questions");
+    const questions = await fetchData(`${SERVER_API_URL}/all_questions`);
 
     return (
         <>

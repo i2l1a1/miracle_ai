@@ -7,6 +7,7 @@ import SingleLineInputField from "@/components/input/single-line-input-field";
 import AuthButtonBig from "@/components/buttons/auth-button-big";
 import {FormEvent, useState, useEffect} from "react";
 import {useAuth} from "@/context/AuthContext";
+import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }) {
     const {setUsername: setAuthUsername} = useAuth();
@@ -30,7 +31,7 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
         setError("");
 
         try {
-            const response = await fetch(`http://localhost:8080/register`, {
+            const response = await fetch(`${CLIENT_API_URL}/register`, {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -67,7 +68,7 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
         formDetails.append("password", password);
 
         try {
-            const response = await fetch(`http://localhost:8080/token`, {
+            const response = await fetch(`${CLIENT_API_URL}/token`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

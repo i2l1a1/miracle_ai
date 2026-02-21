@@ -1,6 +1,7 @@
 "use client";
 
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
+import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 type AuthContextValue = {
     username: string | null;
@@ -20,7 +21,7 @@ export function AuthProvider({children}: { children: ReactNode }) {
     useEffect(() => {
         const verifyToken = async () => {
             try {
-                const response = await fetch("http://localhost:8080/verify-token", {
+                const response = await fetch(`${CLIENT_API_URL}/verify-token`, {
                     method: "GET",
                     credentials: "include",
                 });

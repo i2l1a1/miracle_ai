@@ -4,6 +4,7 @@ import {useAuth} from "@/context/AuthContext";
 import {useRouter} from "next/navigation";
 import MenuItem from "@/components/menus/menu-item";
 import {useEffect, useRef, RefObject} from "react";
+import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function AccountMenu({onClose, triggerRef}: {
     onClose: () => void,
@@ -30,7 +31,7 @@ export default function AccountMenu({onClose, triggerRef}: {
 
     const handleLogout = async () => {
         try {
-            const response = await fetch("http://localhost:8080/logout", {
+            const response = await fetch(`${CLIENT_API_URL}/logout`, {
                 method: "POST",
                 credentials: "include",
             });
