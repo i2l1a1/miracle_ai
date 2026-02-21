@@ -1,4 +1,4 @@
-export type HomePageQuestionType = {
+export type HomePageQuestionProps = {
     date_added: string;
     id: number;
     username: string;

@@ -34,3 +34,14 @@ async def delete_question_crud(question_id: int):
         await db.commit()
 
         return {"is_ok": True, "id": question_id}
+
+
+async def get_question_crud(question_id: int):
+    async with SessionLocal() as db:
+        result = await db.execute(select(QuestionDBModel).where(QuestionDBModel.id == question_id))
+        question = result.scalar_one_or_none()
+
+        if not question:
+            return {"is_ok": False, "message": f"Question with id {question_id} not found"}
+
+        return {"is_ok": True, "question": QuestionSchema.model_validate(question)}

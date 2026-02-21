@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 
-from database.crud import get_all_questions_crud, add_new_question_crud, delete_question_crud
+from database.crud import (get_all_questions_crud,
+                           add_new_question_crud,
+                           delete_question_crud,
+                           get_question_crud)
 from schemas.pydantic_schemas import QuestionSchema
 
 router = APIRouter()
@@ -19,3 +22,8 @@ async def add_new_question(questions: QuestionSchema):
 @router.delete("/delete_question/{question_id}")
 async def delete_question(question_id: int):
     return await delete_question_crud(question_id)
+
+
+@router.get("/get_question/{question_id}")
+async def get_question(question_id: int):
+    return await get_question_crud(question_id)
