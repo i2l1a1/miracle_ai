@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime
 from pydantic import BaseModel, Field
 
 
@@ -13,6 +13,25 @@ class QuestionSchema(BaseModel):
     status: str = Field(default="Answered by AI")
 
     model_config = {"from_attributes": True}
+
+
+class AnswerSchema(BaseModel):
+    id: Optional[int] = None
+    username: str
+    text: str
+    rating: int = 0
+    is_bot: bool = False
+    date_added: Optional[datetime] = None
+
+    model_config = {"from_attributes": True}
+
+
+class AnswerCreateSchema(BaseModel):
+    question_id: int
+    username: str
+    text: str
+    rating: int = 0
+    is_bot: bool = False
 
 
 class UserCreateSchema(BaseModel):

@@ -4,6 +4,7 @@ import UserAvatar from "@/public/icons/user-green.svg"
 import Tag from "@/components/tags/Tag";
 import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
+import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-holder";
 
 export default function Question({question, mode}: { question: HomePageQuestionProps, mode: QuestionMode }) {
     const formattedDateAdded = new Intl.DateTimeFormat("en-US", {
@@ -14,10 +15,7 @@ export default function Question({question, mode}: { question: HomePageQuestionP
     const content = (
         <div className={`pt-6 mb-6 ${question.id !== 1 ? "border-t border-separator" : ""}`}>
             <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-2">
-                    <Image src={UserAvatar} alt="Avatar"/>
-                    <p>{question.username}</p>
-                </div>
+                <AvatarAndUsernameHolder username={question.username}/>
                 <div>
                     <p className="text-question-header text-bright-text font-bold mb-2">{question.title}</p>
                     <p>{question.text}</p>
