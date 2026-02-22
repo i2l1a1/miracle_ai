@@ -64,4 +64,4 @@ async def add_answer_crud(payload: AnswerCreateSchema):
         db.add(new_answer)
         await db.commit()
         await db.refresh(new_answer)
-        return {"is_ok": True, "id": new_answer.id}
+        return {"is_ok": True, "id": new_answer.id, "answer": AnswerSchema.model_validate(new_answer)}

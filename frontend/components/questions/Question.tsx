@@ -1,6 +1,4 @@
 import {HomePageQuestionProps} from "@/app/home/types";
-import Image from "next/image";
-import UserAvatar from "@/public/icons/user-green.svg"
 import Tag from "@/components/tags/Tag";
 import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
@@ -10,6 +8,7 @@ export default function Question({question, mode}: { question: HomePageQuestionP
     const formattedDateAdded = new Intl.DateTimeFormat("en-US", {
         dateStyle: "short",
         timeStyle: "short",
+        timeZone: "UTC",
     }).format(new Date(question.date_added));
 
     const content = (

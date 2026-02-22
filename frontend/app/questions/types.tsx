@@ -1,3 +1,5 @@
+import {HomePageQuestionProps} from "@/app/home/types";
+
 export type QuestionInnerProps = {
     params: Promise<{
         id: string
@@ -16,3 +18,17 @@ export type AnswerType = {
 export type AnswerListProps = {
     answers: AnswerType[]
 }
+
+export type QuestionDetailContentProps = {
+    question: HomePageQuestionProps;
+    initialAnswers: AnswerType[];
+};
+
+export type AnswerFormLoginPromptProps = {
+    onLoginClickAction: () => void;
+};
+
+export type AnswerFormProps = {
+    questionId: number;
+    onSuccessAction: (answer: AnswerType) => void;
+};
