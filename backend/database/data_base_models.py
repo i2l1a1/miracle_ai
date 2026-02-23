@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Text, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Text, Boolean, ForeignKey, UniqueConstraint
 from database.data_base_init import Base
 from datetime import datetime, timezone
 
@@ -23,7 +23,12 @@ class AnswerDBModel(Base):
     __tablename__ = "answers"
 
     id = Column(Integer, primary_key=True, index=True)
-    question_id = Column(Integer, ForeignKey("questions.id"), nullable=False, index=True)
+    question_id = Column(
+        Integer,
+        ForeignKey("questions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     username = Column(String, nullable=False)
     text = Column(Text, nullable=False)
     rating = Column(Integer, default=0, nullable=False)
@@ -33,6 +38,22 @@ class AnswerDBModel(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
+
+
+class VoteDBModel(Base):
+    __tablename__ = "votes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    answer_id = Column(
+        Integer,
+        ForeignKey("answers.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    username = Column(String, nullable=False, index=True)
+    vote_type = Column(Integer, nullable=False)
+
+    __table_args__ = (UniqueConstraint("answer_id", "username", name="uq_vote_answer_username"),)
 
 
 class User(Base):

@@ -22,6 +22,7 @@ class AnswerSchema(BaseModel):
     rating: int = 0
     is_bot: bool = False
     date_added: Optional[datetime] = None
+    current_vote: Optional[int] = None
 
     model_config = {"from_attributes": True}
 
@@ -32,6 +33,12 @@ class AnswerCreateSchema(BaseModel):
     text: str
     rating: int = 0
     is_bot: bool = False
+
+
+class VoteSchema(BaseModel):
+    answer_id: int
+    username: str
+    vote_type: int
 
 
 class UserCreateSchema(BaseModel):

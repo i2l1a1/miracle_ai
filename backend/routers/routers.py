@@ -6,8 +6,9 @@ from database.crud import (
     delete_question_crud,
     get_question_crud,
     add_answer_crud,
+    vote_answer_crud,
 )
-from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema
+from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema
 
 router = APIRouter()
 
@@ -28,10 +29,15 @@ async def delete_question(question_id: int):
 
 
 @router.get("/get_question/{question_id}")
-async def get_question(question_id: int):
-    return await get_question_crud(question_id)
+async def get_question(question_id: int, username: str | None = None):
+    return await get_question_crud(question_id, username)
 
 
 @router.post("/add_answer")
 async def add_answer(payload: AnswerCreateSchema):
     return await add_answer_crud(payload)
+
+
+@router.post("/vote_answer")
+async def vote_answer(payload: VoteSchema):
+    return await vote_answer_crud(payload)

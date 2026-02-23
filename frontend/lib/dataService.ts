@@ -1,4 +1,10 @@
-import {AddAnswerParams, AddAnswerResponse, SubmitAnswerCallbacks} from "@/lib/types";
+import {
+    AddAnswerParams,
+    AddAnswerResponse,
+    SubmitAnswerCallbacks,
+    VoteAnswerParams,
+    VoteAnswerResponse
+} from "@/lib/types";
 
 export async function fetchData(url: string) {
     const response = await fetch(url);
@@ -63,4 +69,23 @@ export async function submitAnswer(
     } finally {
         callbacks.onFinally();
     }
+}
+
+export async function voteAnswer(
+    params: VoteAnswerParams,
+    apiUrl: string
+): Promise<VoteAnswerResponse> {
+    const res = await fetch(`${apiUrl}/vote_answer`, {
+        method: "POST",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            answer_id: params.answerId,
+            username: params.username,
+            vote_type: params.voteType,
+        }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message ?? "Vote failed");
+    return data;
 }

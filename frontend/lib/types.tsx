@@ -33,3 +33,14 @@ export type SubmitAnswerCallbacks = {
     onFinally: () => void;
     onClearText?: () => void;
 };
+
+export type VoteAnswerParams = {
+    answerId: number;
+    username: string;
+    voteType: number
+};
+export type VoteAnswerResponse = {
+    is_ok: boolean;
+    rating?: number;
+    message?: string
+};

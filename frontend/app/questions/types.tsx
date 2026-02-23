@@ -13,10 +13,13 @@ export type AnswerType = {
     rating: number
     is_bot: boolean
     date_added: string
+    current_vote?: number
 }
 
 export type AnswerListProps = {
-    answers: AnswerType[]
+    answers: AnswerType[];
+    onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
+    onAuthRequiredAction: () => void;
 }
 
 export type QuestionDetailContentProps = {
