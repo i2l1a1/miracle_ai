@@ -18,10 +18,11 @@ export default function AnswerList({
     if (!answers.length) return null;
     return (
         <div>
-            {answers.map((answer) => (
+            {answers.map((answer, index) => (
                 <AnswerItem
                     key={answer.id}
                     answer={answer}
+                    showTopBorder={index > 0}
                     onRatingUpdateAction={onRatingUpdateAction}
                     onAuthRequiredAction={onAuthRequiredAction}
                 />
@@ -32,10 +33,12 @@ export default function AnswerList({
 
 function AnswerItem({
     answer,
+    showTopBorder = false,
     onRatingUpdateAction,
     onAuthRequiredAction,
 }: {
     answer: AnswerType;
+    showTopBorder?: boolean;
     onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
     onAuthRequiredAction: () => void;
 }) {
@@ -77,7 +80,7 @@ function AnswerItem({
     };
 
     return (
-        <div className="border-t border-separator py-6">
+        <div className={`py-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
             <AvatarAndUsernameHolder username={answer.username} isBot={answer.is_bot}/>
             <div className="mt-5">
                 <p className="text-text">{answer.text}</p>

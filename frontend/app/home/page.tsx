@@ -11,8 +11,13 @@ export default async function HomePage() {
     return (
         <>
             <Filter questionsCount={questions.length}/>
-            {questions.map((question: HomePageQuestionProps) => (
-                <Question key={question.id} question={question} mode={QuestionMode.HOME_PAGE}/>
+            {questions.map((question: HomePageQuestionProps, index: number) => (
+                <Question
+                    key={question.id}
+                    question={question}
+                    mode={QuestionMode.HOME_PAGE}
+                    showTopBorder={index > 0}
+                />
             ))}
         </>
     );

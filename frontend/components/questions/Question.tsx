@@ -4,7 +4,15 @@ import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
 import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-holder";
 
-export default function Question({question, mode}: { question: HomePageQuestionProps, mode: QuestionMode }) {
+export default function Question({
+    question,
+    mode,
+    showTopBorder = false,
+}: {
+    question: HomePageQuestionProps;
+    mode: QuestionMode;
+    showTopBorder?: boolean;
+}) {
     const formattedDateAdded = new Intl.DateTimeFormat("en-US", {
         dateStyle: "short",
         timeStyle: "short",
@@ -12,7 +20,7 @@ export default function Question({question, mode}: { question: HomePageQuestionP
     }).format(new Date(question.date_added));
 
     const content = (
-        <div className={`pt-6 mb-6 ${question.id !== 1 ? "border-t border-separator" : ""}`}>
+        <div className={`pt-6 mb-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
             <div className="flex flex-col gap-5">
                 <AvatarAndUsernameHolder username={question.username}/>
                 <div>
