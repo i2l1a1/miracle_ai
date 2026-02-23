@@ -82,7 +82,7 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
             if (response.ok) {
                 setAuthUsername(username);
                 onCloseAction();
-                const redirect = typeof window !== "undefined" ? sessionStorage.getItem("redirectAfterLogin") : null;
+                const redirect = sessionStorage.getItem("redirectAfterLogin");
                 if (redirect) {
                     sessionStorage.removeItem("redirectAfterLogin");
                     router.push(redirect);

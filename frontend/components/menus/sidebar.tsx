@@ -25,7 +25,7 @@ export default function Sidebar({onCloseAction, onOpenAuthAction}: SidebarProps)
 
     const handleNewQuestion = () => {
         if (!username) {
-            // sessionStorage.setItem("redirectAfterLogin", "/new-question");
+            sessionStorage.setItem("redirectAfterLogin", "/new-question");
             onOpenAuthAction?.();
         }
         onCloseAction();
