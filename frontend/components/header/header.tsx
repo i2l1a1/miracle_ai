@@ -40,7 +40,12 @@ export default function Header() {
                 )}
             </div>
             {showAccountMenu && <AccountMenu onClose={() => setShowAccountMenu(false)} triggerRef={avatarRef}/>}
-            {showSidebar && <Sidebar onClose={() => setShowSidebar(false)}/>}
+            {showSidebar && (
+                <Sidebar
+                    onCloseAction={() => setShowSidebar(false)}
+                    onOpenAuthAction={() => { setShowSidebar(false); setShowAuth(true); }}
+                />
+            )}
             {showAuth && <AuthPopup onCloseAction={() => setShowAuth(false)}/>}
         </div>
     );

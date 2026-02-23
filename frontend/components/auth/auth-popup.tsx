@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import closeAuth from "@/public/icons/close-auth.svg"
+import closeAuth from "@/public/icons/close-auth.svg";
 import Image from "next/image";
+import {useRouter} from "next/navigation";
 import {momoTrustDisplay} from "@/app/fonts";
 import SingleLineInputField from "@/components/input/single-line-input-field";
 import AuthButtonBig from "@/components/buttons/auth-button-big";
@@ -10,6 +11,7 @@ import {useAuth} from "@/context/AuthContext";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }) {
+    const router = useRouter();
     const {setUsername: setAuthUsername} = useAuth();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -80,6 +82,11 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
             if (response.ok) {
                 setAuthUsername(username);
                 onCloseAction();
+                const redirect = typeof window !== "undefined" ? sessionStorage.getItem("redirectAfterLogin") : null;
+                if (redirect) {
+                    sessionStorage.removeItem("redirectAfterLogin");
+                    router.push(redirect);
+                }
             } else {
                 const errorData = await response.json();
                 setError(errorData.detail || "Authentication failed!");
