@@ -1,11 +1,9 @@
 import {ProtectedRoute} from "@/components/auth/ProtectedRoute";
 
-export default function MyAnswersPage() {
+export default function ActivityPage() {
     return (
         <ProtectedRoute>
-            <>
-                My answers
-            </>
+            <div>Activity</div>
         </ProtectedRoute>
     );
 }

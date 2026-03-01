@@ -4,8 +4,7 @@ import SidebarButtonAndLogo from "@/components/header/sidebar-button-and-logo";
 import MenuItem from "@/components/menus/menu-item";
 import HomeIcon from "@/public/icons/sidebar-home.svg";
 import NewQuestionIcon from "@/public/icons/sidebar-new-question.svg";
-import MyQuestionsIcon from "@/public/icons/sidebar-my-questions.svg";
-import MyAnswersIcon from "@/public/icons/sidebar-my-answers.svg";
+import ActivityIcon from "@/public/icons/sidebar-activity.svg";
 import HowItWorksIcon from "@/public/icons/sidebar-how-it-works.svg";
 import {useEffect, useRef} from "react";
 import {useAuth} from "@/context/AuthContext";
@@ -47,12 +46,7 @@ export default function Sidebar({onCloseAction, onOpenAuthAction}: SidebarProps)
                         onClick={handleNewQuestion}
                     />
                     {username && (
-                        <>
-                            <MenuItem icon={MyQuestionsIcon} text="My questions" href="/my-questions"
-                                      onClick={onCloseAction}/>
-                            <MenuItem icon={MyAnswersIcon} text="My answers" href="/my-answers"
-                                      onClick={onCloseAction}/>
-                        </>
+                        <MenuItem icon={ActivityIcon} text="Activity" href="/activity" onClick={onCloseAction}/>
                     )}
                     <MenuItem icon={HowItWorksIcon} text="How it works?" href="/how-it-works" onClick={onCloseAction}/>
                 </div>

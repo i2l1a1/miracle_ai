@@ -1,10 +1,13 @@
-"use client"
+"use client";
 
-import AuthButtonSmall from "@/components/buttons/auth-button-small";
-import {useState, useRef, useEffect} from "react";
-import AuthPopup from "@/components/auth/auth-popup";
-import UserAvatar from "@/public/icons/user-green.svg"
+import Link from "next/link";
 import Image from "next/image";
+import {useState, useRef, useEffect} from "react";
+import AuthButtonSmall from "@/components/buttons/auth-button-small";
+import AuthPopup from "@/components/auth/auth-popup";
+import UserAvatar from "@/public/icons/user-green.svg";
+import ActivityIcon from "@/public/icons/header-activity.svg";
+import NewQuestionIcon from "@/public/icons/header-new-question.svg";
 import {useAuth} from "@/context/AuthContext";
 import AccountMenu from "@/components/menus/account-menu";
 import Sidebar from "@/components/menus/sidebar";
@@ -31,10 +34,23 @@ export default function Header() {
                 className="flex items-center justify-between h-full py-[10px] bg-blur-background">
                 <SidebarButtonAndLogo onSidebarButtonClick={() => setShowSidebar(true)}/>
                 {loading ? (
-                    <div className="w-9 h-9 mr-4 bg-separator rounded-full animate-pulse"></div>
+                    <div className="w-9 h-9 mr-4 bg-separator rounded-full animate-pulse"/>
                 ) : username ? (
-                    <Image src={UserAvatar} alt="User Avatar" className="cursor-pointer mr-4" ref={avatarRef}
-                           onClick={() => setShowAccountMenu(!showAccountMenu)}/>
+                    <div className="flex items-center gap-1 mr-4">
+                        <Link href="/activity" className="p-0 border-0 bg-transparent cursor-pointer block">
+                            <Image src={ActivityIcon} alt="Activity" width={44} height={44}/>
+                        </Link>
+                        <Link href="/new-question" className="p-0 border-0 bg-transparent cursor-pointer block">
+                            <Image src={NewQuestionIcon} alt="New question" width={44} height={44}/>
+                        </Link>
+                        <Image
+                            src={UserAvatar}
+                            alt="User Avatar"
+                            className="cursor-pointer block"
+                            ref={avatarRef}
+                            onClick={() => setShowAccountMenu(!showAccountMenu)}
+                        />
+                    </div>
                 ) : (
                     <AuthButtonSmall onClick={() => setShowAuth(true)}/>
                 )}
