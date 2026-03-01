@@ -71,6 +71,26 @@ export async function submitAnswer(
     }
 }
 
+export async function createQuestion(
+    params: { username: string; title: string; text: string; tags?: string[] },
+    apiUrl: string
+): Promise<{ is_ok: boolean; id?: number; message?: string }> {
+    const res = await fetch(`${apiUrl}/add_new_question`, {
+        method: "POST",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            username: params.username,
+            title: params.title.trim(),
+            text: params.text.trim(),
+            tags: params.tags ?? [],
+        }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message ?? "Failed to create question");
+    return data;
+}
+
 export async function voteAnswer(
     params: VoteAnswerParams,
     apiUrl: string

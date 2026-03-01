@@ -1,7 +1,8 @@
 "use client";
 
-import {useState, type ChangeEvent} from "react";
+import {useState} from "react";
 import {useAuth} from "@/context/AuthContext";
+import MultilineInputField from "@/components/input/multiline-input-field";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import {submitAnswer} from "@/lib/dataService";
 import {AnswerFormProps, AnswerType} from "@/app/questions/types";
@@ -45,13 +46,15 @@ export default function AnswerForm({questionId, onSuccessAction}: AnswerFormProp
 
     return (
         <>
-            <textarea
-                placeholder="Share what you think..."
-                value={answerText}
-                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setAnswerText(e.target.value)}
-                className="w-full p-4 rounded-[12px] border border-input-stroke focus:outline-none focus:ring-0 focus:shadow-none placeholder:text-gray-text mb-4 resize-none min-h-[120px]"
-                disabled={submitting}
-            />
+            <div className="mb-4">
+                <MultilineInputField
+                    name="answer"
+                    placeholder="Share what you think..."
+                    value={answerText}
+                    onChange={(e) => setAnswerText(e.target.value)}
+                    disabled={submitting}
+                />
+            </div>
             {error && <p className="text-danger-color mb-4">{error}</p>}
             <div className="flex justify-end">
                 <button
