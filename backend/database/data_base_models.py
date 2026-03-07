@@ -23,6 +23,7 @@ class QuestionDBModel(Base):
         nullable=False,
     )
     status = Column(String(40), default="Answered by AI", nullable=False)
+    answers_count = Column(Integer, default=0, nullable=False)
 
 
 class AnswerDBModel(Base):

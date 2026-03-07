@@ -34,7 +34,11 @@ export default function Question({
                 </div>
                 <div className="flex justify-between gap-2">
                     <p className="text-gray-text">{formattedDateAdded}</p>
-                    <p className="text-gray-text">{question.status}</p>
+                    <p className="text-gray-text">
+                        {question.answers_count === 0
+                            ? "Answered by AI"
+                            : `${question.answers_count} answers + AI`}
+                    </p>
                 </div>
             </div>
         </div>

@@ -121,6 +121,12 @@ async def add_answer_crud(payload: AnswerCreateSchema):
             is_bot=payload.is_bot,
         )
         db.add(new_answer)
+        question_result = await db.execute(
+            select(QuestionDBModel).where(QuestionDBModel.id == payload.question_id)
+        )
+        question = question_result.scalar_one_or_none()
+        if question:
+            question.answers_count += 1
         user_result = await db.execute(
             select(User).where(User.id == payload.user_id)
         )
@@ -129,6 +135,7 @@ async def add_answer_crud(payload: AnswerCreateSchema):
             user.answers_count += 1
         await db.commit()
         await db.refresh(new_answer)
+        await db.refresh(question)
         return {
             "is_ok": True,
             "id": new_answer.id,

@@ -5,5 +5,6 @@ export type HomePageQuestionProps = {
     title: string;
     text: string;
     tags: string[];
+    answers_count: number;
     status: string;
 };

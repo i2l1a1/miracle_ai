@@ -12,6 +12,7 @@ class QuestionSchema(BaseModel):
     tags: Optional[List[str]] = None
     date_added: Optional[datetime] = None
     status: str = Field(default="Answered by AI")
+    answers_count: int = Field(default=0)
 
     model_config = {"from_attributes": True}
 
