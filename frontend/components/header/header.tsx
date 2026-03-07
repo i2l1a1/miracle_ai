@@ -37,7 +37,7 @@ export default function Header() {
                     <div className="w-9 h-9 mr-4 bg-separator rounded-full animate-pulse"/>
                 ) : username ? (
                     <div className="flex items-center gap-1 mr-4">
-                        <Link href="/activity" className="p-0 border-0 bg-transparent cursor-pointer block">
+                        <Link href="/activity/my-questions" className="p-0 border-0 bg-transparent cursor-pointer block">
                             <Image src={ActivityIcon} alt="Activity" width={44} height={44}/>
                         </Link>
                         <Link href="/new-question" className="p-0 border-0 bg-transparent cursor-pointer block">

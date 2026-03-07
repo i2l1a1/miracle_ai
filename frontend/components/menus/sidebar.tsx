@@ -46,7 +46,7 @@ export default function Sidebar({onCloseAction, onOpenAuthAction}: SidebarProps)
                         onClick={handleNewQuestion}
                     />
                     {username && (
-                        <MenuItem icon={ActivityIcon} text="Activity" href="/activity" onClick={onCloseAction}/>
+                        <MenuItem icon={ActivityIcon} text="Activity" href="/activity/my-questions" onClick={onCloseAction}/>
                     )}
                     <MenuItem icon={HowItWorksIcon} text="How it works?" href="/how-it-works" onClick={onCloseAction}/>
                 </div>

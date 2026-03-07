@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from database.crud import (
     get_all_questions_crud,
+    get_questions_by_username_crud,
     add_new_question_crud,
     delete_question_crud,
     get_question_crud,
@@ -16,6 +17,11 @@ router = APIRouter()
 @router.get("/all_questions")
 async def get_all_questions():
     return await get_all_questions_crud()
+
+
+@router.get("/questions_by_user")
+async def get_questions_by_user(username: str):
+    return await get_questions_by_username_crud(username)
 
 
 @router.post("/add_new_question")

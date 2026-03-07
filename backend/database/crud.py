@@ -11,6 +11,15 @@ async def get_all_questions_crud():
         return [QuestionSchema.model_validate(q) for q in questions]
 
 
+async def get_questions_by_username_crud(username: str):
+    async with SessionLocal() as db:
+        result = await db.execute(
+            select(QuestionDBModel).where(QuestionDBModel.username == username)
+        )
+        questions = result.scalars().all()
+        return [QuestionSchema.model_validate(q) for q in questions]
+
+
 async def add_new_question_crud(questions: QuestionSchema):
     async with SessionLocal() as db:
         new_question = QuestionDBModel(**dict(questions))
