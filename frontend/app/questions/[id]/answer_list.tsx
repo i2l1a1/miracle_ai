@@ -42,7 +42,7 @@ function AnswerItem({
     onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
     onAuthRequiredAction: () => void;
 }) {
-    const {username} = useAuth();
+    const {userId} = useAuth();
     const [loading, setLoading] = useState(false);
     const currentVote = answer.current_vote ?? null;
 
@@ -53,7 +53,7 @@ function AnswerItem({
     }).format(new Date(answer.date_added));
 
     const handleVote = async (voteType: number) => {
-        if (!username) {
+        if (!userId) {
             onAuthRequiredAction();
             return;
         }
@@ -63,7 +63,7 @@ function AnswerItem({
         setLoading(true);
         try {
             const data = await voteAnswer(
-                {answerId: answer.id, username, voteType},
+                {answerId: answer.id, userId, voteType},
                 CLIENT_API_URL
             );
             if (data.is_ok) {

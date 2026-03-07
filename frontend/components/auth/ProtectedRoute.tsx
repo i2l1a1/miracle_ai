@@ -6,13 +6,13 @@ import {useAuth} from "@/context/AuthContext";
 
 export function ProtectedRoute({children}: { children: React.ReactNode }) {
     const router = useRouter();
-    const {username, loading} = useAuth();
+    const {userId, loading} = useAuth();
 
     useEffect(() => {
-        if (!loading && !username) {
+        if (!loading && !userId) {
             router.push("/home");
         }
-    }, [username, loading, router]);
+    }, [userId, loading, router]);
 
     if (loading) {
         return (
@@ -20,7 +20,7 @@ export function ProtectedRoute({children}: { children: React.ReactNode }) {
         );
     }
 
-    if (!username) {
+    if (!userId) {
         return null;
     }
 

@@ -1,9 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from database.crud import (
     get_all_questions_crud,
-    get_questions_by_username_crud,
-    get_answers_by_username_crud,
+    get_questions_by_user_id_crud,
+    get_answers_by_user_id_crud,
     add_new_question_crud,
     delete_question_crud,
     get_question_crud,
@@ -11,6 +11,8 @@ from database.crud import (
     vote_answer_crud,
 )
 from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema
+from security.authSecurity import get_current_user, get_current_user_optional
+from database.data_base_models import User
 
 router = APIRouter()
 
@@ -20,19 +22,24 @@ async def get_all_questions():
     return await get_all_questions_crud()
 
 
-@router.get("/questions_by_user")
-async def get_questions_by_user(username: str):
-    return await get_questions_by_username_crud(username)
+@router.get("/my-questions")
+async def get_my_questions(current_user: User = Depends(get_current_user)):
+    return await get_questions_by_user_id_crud(current_user.id)
 
 
-@router.get("/answers_by_user")
-async def get_answers_by_user(username: str):
-    return await get_answers_by_username_crud(username)
+@router.get("/my-answers")
+async def get_my_answers(current_user: User = Depends(get_current_user)):
+    return await get_answers_by_user_id_crud(current_user.id)
 
 
 @router.post("/add_new_question")
-async def add_new_question(questions: QuestionSchema):
-    return await add_new_question_crud(questions)
+async def add_new_question(
+    question: QuestionSchema,
+    current_user: User = Depends(get_current_user),
+):
+    question.user_id = current_user.id
+    question.username = current_user.username
+    return await add_new_question_crud(question)
 
 
 @router.delete("/delete_question/{question_id}")
@@ -41,15 +48,28 @@ async def delete_question(question_id: int):
 
 
 @router.get("/get_question/{question_id}")
-async def get_question(question_id: int, username: str | None = None):
-    return await get_question_crud(question_id, username)
+async def get_question(
+    question_id: int,
+    current_user: User | None = Depends(get_current_user_optional),
+):
+    user_id = current_user.id if current_user else None
+    return await get_question_crud(question_id, user_id)
 
 
 @router.post("/add_answer")
-async def add_answer(payload: AnswerCreateSchema):
+async def add_answer(
+    payload: AnswerCreateSchema,
+    current_user: User = Depends(get_current_user),
+):
+    payload.user_id = current_user.id
+    payload.username = current_user.username
     return await add_answer_crud(payload)
 
 
 @router.post("/vote_answer")
-async def vote_answer(payload: VoteSchema):
+async def vote_answer(
+    payload: VoteSchema,
+    current_user: User = Depends(get_current_user),
+):
+    payload.user_id = current_user.id
     return await vote_answer_crud(payload)

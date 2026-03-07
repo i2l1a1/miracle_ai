@@ -9,24 +9,26 @@ import { HomePageQuestionProps } from "@/app/home/types";
 import { QuestionMode } from "@/global_types/types";
 
 export default function MyQuestionsContent() {
-    const { username } = useAuth();
+    const { userId } = useAuth();
     const [questions, setQuestions] = useState<HomePageQuestionProps[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!username) return;
+        if (!userId) {
+            setQuestions([]);
+            setLoading(false);
+            return;
+        }
         setLoading(true);
-        fetchData(
-            `${CLIENT_API_URL}/questions_by_user?username=${encodeURIComponent(username)}`
-        )
+        fetchData(`${CLIENT_API_URL}/my-questions`)
             .then((data: HomePageQuestionProps[]) => {
                 setQuestions(Array.isArray(data) ? data : []);
             })
             .catch(() => setQuestions([]))
             .finally(() => setLoading(false));
-    }, [username]);
+    }, [userId]);
 
-    if (!username) {
+    if (!userId) {
         return <p className="text-gray-text">No questions yet.</p>;
     }
     if (loading) {

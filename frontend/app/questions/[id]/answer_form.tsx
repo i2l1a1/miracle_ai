@@ -8,19 +8,20 @@ import {submitAnswer} from "@/lib/dataService";
 import {AnswerFormProps, AnswerType} from "@/app/questions/types";
 
 export default function AnswerForm({questionId, onSuccessAction}: AnswerFormProps) {
-    const {username} = useAuth();
+    const {username, userId} = useAuth();
     const [answerText, setAnswerText] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handlePublish = async () => {
-        if (!username || !answerText.trim()) return;
+        if (!userId || !answerText.trim()) return;
         setError(null);
         setSubmitting(true);
 
         await submitAnswer(
             {
                 questionId,
+                userId,
                 username,
                 text: answerText.trim(),
                 rating: 0,

@@ -12,7 +12,7 @@ import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }) {
     const router = useRouter();
-    const {setUsername: setAuthUsername} = useAuth();
+    const {setAuth} = useAuth();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -80,7 +80,8 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
             });
 
             if (response.ok) {
-                setAuthUsername(username);
+                const data = await response.json();
+                setAuth(data.username ?? username, data.user_id ?? null);
                 onCloseAction();
                 const redirect = sessionStorage.getItem("redirectAfterLogin");
                 if (redirect) {

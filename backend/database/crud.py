@@ -17,22 +17,22 @@ async def get_all_questions_crud():
         return [QuestionSchema.model_validate(q) for q in questions]
 
 
-async def get_questions_by_username_crud(username: str):
+async def get_questions_by_user_id_crud(user_id: int):
     async with SessionLocal() as db:
         result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.username == username)
+            select(QuestionDBModel).where(QuestionDBModel.user_id == user_id)
         )
         questions = result.scalars().all()
         return [QuestionSchema.model_validate(q) for q in questions]
 
 
-async def add_new_question_crud(questions: QuestionSchema):
+async def add_new_question_crud(question: QuestionSchema):
     async with SessionLocal() as db:
-        new_question = QuestionDBModel(**dict(questions))
+        new_question = QuestionDBModel(**dict(question))
 
         db.add(new_question)
         user_result = await db.execute(
-            select(User).where(User.username == new_question.username)
+            select(User).where(User.id == question.user_id)
         )
         user = user_result.scalar_one_or_none()
         if user:
@@ -45,7 +45,9 @@ async def add_new_question_crud(questions: QuestionSchema):
 
 async def delete_question_crud(question_id: int):
     async with SessionLocal() as db:
-        result = await db.execute(select(QuestionDBModel).where(QuestionDBModel.id == question_id))
+        result = await db.execute(
+            select(QuestionDBModel).where(QuestionDBModel.id == question_id)
+        )
         question = result.scalar_one_or_none()
 
         if not question:
@@ -57,21 +59,23 @@ async def delete_question_crud(question_id: int):
         return {"is_ok": True, "id": question_id}
 
 
-async def get_question_crud(question_id: int, username: str | None = None):
+async def get_question_crud(question_id: int, user_id: int | None = None):
     async with SessionLocal() as db:
-        q_result = await db.execute(select(QuestionDBModel).where(QuestionDBModel.id == question_id))
+        q_result = await db.execute(
+            select(QuestionDBModel).where(QuestionDBModel.id == question_id)
+        )
         question = q_result.scalar_one_or_none()
         if not question:
             return {"is_ok": False, "message": f"Question with id {question_id} not found"}
 
-        if username:
+        if user_id is not None:
             stmt = (
                 select(AnswerDBModel, VoteDBModel.vote_type)
                 .outerjoin(
                     VoteDBModel,
                     and_(
                         VoteDBModel.answer_id == AnswerDBModel.id,
-                        VoteDBModel.username == username,
+                        VoteDBModel.user_id == user_id,
                     ),
                 )
                 .where(AnswerDBModel.question_id == question_id)
@@ -83,9 +87,13 @@ async def get_question_crud(question_id: int, username: str | None = None):
                 d["current_vote"] = vote_type
                 answers_data.append(d)
         else:
-            a_result = await db.execute(select(AnswerDBModel).where(AnswerDBModel.question_id == question_id))
+            a_result = await db.execute(
+                select(AnswerDBModel).where(AnswerDBModel.question_id == question_id)
+            )
             answers = a_result.scalars().all()
-            answers_data = [AnswerSchema.model_validate(a).model_dump() for a in answers]
+            answers_data = [
+                AnswerSchema.model_validate(a).model_dump() for a in answers
+            ]
 
         return {
             "is_ok": True,
@@ -100,27 +108,40 @@ async def add_answer_crud(payload: AnswerCreateSchema):
             select(QuestionDBModel).where(QuestionDBModel.id == payload.question_id)
         )
         if q_result.scalar_one_or_none() is None:
-            return {"is_ok": False, "message": f"Question with id {payload.question_id} not found"}
+            return {
+                "is_ok": False,
+                "message": f"Question with id {payload.question_id} not found",
+            }
 
-        new_answer = AnswerDBModel(**payload.model_dump())
+        new_answer = AnswerDBModel(
+            question_id=payload.question_id,
+            user_id=payload.user_id,
+            username=payload.username,
+            text=payload.text,
+            is_bot=payload.is_bot,
+        )
         db.add(new_answer)
         user_result = await db.execute(
-            select(User).where(User.username == payload.username)
+            select(User).where(User.id == payload.user_id)
         )
         user = user_result.scalar_one_or_none()
         if user:
             user.answers_count += 1
         await db.commit()
         await db.refresh(new_answer)
-        return {"is_ok": True, "id": new_answer.id, "answer": AnswerSchema.model_validate(new_answer)}
+        return {
+            "is_ok": True,
+            "id": new_answer.id,
+            "answer": AnswerSchema.model_validate(new_answer),
+        }
 
 
-async def get_answers_by_username_crud(username: str):
+async def get_answers_by_user_id_crud(user_id: int):
     async with SessionLocal() as db:
         stmt = (
             select(AnswerDBModel, QuestionDBModel.title)
             .join(QuestionDBModel, AnswerDBModel.question_id == QuestionDBModel.id)
-            .where(AnswerDBModel.username == username)
+            .where(AnswerDBModel.user_id == user_id)
         )
         rows = (await db.execute(stmt)).all()
         return [
@@ -135,18 +156,29 @@ async def get_answers_by_username_crud(username: str):
 
 async def vote_answer_crud(payload: VoteSchema):
     async with SessionLocal() as db:
-        a_result = await db.execute(select(AnswerDBModel).where(AnswerDBModel.id == payload.answer_id))
+        a_result = await db.execute(
+            select(AnswerDBModel).where(AnswerDBModel.id == payload.answer_id)
+        )
         answer = a_result.scalar_one_or_none()
         if not answer:
             return {"is_ok": False, "message": "Answer not found"}
         v_result = await db.execute(
             select(VoteDBModel).where(
-                and_(VoteDBModel.answer_id == payload.answer_id, VoteDBModel.username == payload.username)
+                and_(
+                    VoteDBModel.answer_id == payload.answer_id,
+                    VoteDBModel.user_id == payload.user_id,
+                )
             )
         )
         vote = v_result.scalar_one_or_none()
         if vote is None:
-            db.add(VoteDBModel(answer_id=payload.answer_id, username=payload.username, vote_type=payload.vote_type))
+            db.add(
+                VoteDBModel(
+                    answer_id=payload.answer_id,
+                    user_id=payload.user_id,
+                    vote_type=payload.vote_type,
+                )
+            )
             answer.rating += payload.vote_type
         elif vote.vote_type == payload.vote_type:
             await db.delete(vote)

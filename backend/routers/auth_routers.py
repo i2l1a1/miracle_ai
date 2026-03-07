@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
 
 from database.auth_crud import authenticate_user_from_db, get_user_by_username_from_db, create_user_in_db
-from database.data_base_models import User, QuestionDBModel, AnswerDBModel, VoteDBModel
+from database.data_base_models import User, QuestionDBModel, AnswerDBModel
 from schemas.pydantic_schemas import UserCreateSchema, UserUpdateSchema
 from security.authSecurity import (
     get_current_user,
@@ -28,8 +28,11 @@ async def register_user(user: UserCreateSchema, db: AsyncSession = Depends(get_d
 
 
 @auth_router.post("/token")
-async def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestForm = Depends(),
-                                 db: AsyncSession = Depends(get_db)):
+async def login_for_access_token(
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
     user = await authenticate_user_from_db(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
@@ -47,12 +50,16 @@ async def login_for_access_token(response: Response, form_data: OAuth2PasswordRe
                         secure=False,
                         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
                         samesite="lax")
-    return {"message": "Logged in successfully"}
+    return {"message": "Logged in successfully", "username": user.username, "user_id": user.id}
 
 
 @auth_router.get("/verify-token")
 async def verify_user_token(current_user: User = Depends(get_current_user)):
-    return {"message": "Token is valid", "username": current_user.username}
+    return {
+        "message": "Token is valid",
+        "username": current_user.username,
+        "user_id": current_user.id,
+    }
 
 
 @auth_router.get("/me")
@@ -72,31 +79,23 @@ async def update_me(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    old_username = current_user.username
-
     username_changed = payload.username != current_user.username
     language_changed = payload.language != current_user.language
 
-    if payload.username != current_user.username:
+    if username_changed:
         existing = await get_user_by_username_from_db(db, username=payload.username)
         if existing:
             raise HTTPException(status_code=400, detail="Username already registered")
         current_user.username = payload.username
         await db.flush()
-
         await db.execute(
             update(QuestionDBModel)
-            .where(QuestionDBModel.username == old_username)
+            .where(QuestionDBModel.user_id == current_user.id)
             .values(username=payload.username)
         )
         await db.execute(
             update(AnswerDBModel)
-            .where(AnswerDBModel.username == old_username)
-            .values(username=payload.username)
-        )
-        await db.execute(
-            update(VoteDBModel)
-            .where(VoteDBModel.username == old_username)
+            .where(AnswerDBModel.user_id == current_user.id)
             .values(username=payload.username)
         )
 
@@ -120,26 +119,19 @@ async def delete_account(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    old_username = current_user.username
     current_user.status = "DELETED"
-    # Храним в users уникальное имя, чтобы не ломать уникальный индекс,
-    # а в связанных таблицах показываем просто "[DELETED]".
     current_user.username = f"[DELETED_{current_user.id}]"
     await db.flush()
 
+    user_id = current_user.id
     await db.execute(
         update(QuestionDBModel)
-        .where(QuestionDBModel.username == old_username)
+        .where(QuestionDBModel.user_id == user_id)
         .values(username="[DELETED]")
     )
     await db.execute(
         update(AnswerDBModel)
-        .where(AnswerDBModel.username == old_username)
-        .values(username="[DELETED]")
-    )
-    await db.execute(
-        update(VoteDBModel)
-        .where(VoteDBModel.username == old_username)
+        .where(AnswerDBModel.user_id == user_id)
         .values(username="[DELETED]")
     )
 

@@ -12,7 +12,7 @@ import {deleteAccount, getMe, updateMe} from "@/lib/dataService";
 
 export default function SettingsPage() {
     const router = useRouter();
-    const {username, setUsername, resetAuth} = useAuth();
+    const {username, userId, setAuth, setUsername, resetAuth} = useAuth();
     const [usernameInput, setUsernameInput] = useState("");
     const [language, setLanguage] = useState<"en" | "ru">("en");
     const [questionsCount, setQuestionsCount] = useState(0);
@@ -55,7 +55,7 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             const data = await updateMe({username: trimmed, language}, CLIENT_API_URL);
-            setUsername(data.username ?? trimmed);
+            setAuth(data.username ?? trimmed, userId);
             setQuestionsCount(data.questions_count ?? questionsCount);
             setAnswersCount(data.answers_count ?? answersCount);
             if (data.language === "ru" || data.language === "en") {
@@ -130,7 +130,7 @@ export default function SettingsPage() {
                             className="text-danger-color underline cursor-pointer text-button-text disabled:opacity-50"
                             disabled={saving}
                             onClick={async () => {
-                                if (!username) return;
+                                if (!userId) return;
                                 setSaving(true);
                                 try {
                                     await deleteAccount(CLIENT_API_URL);

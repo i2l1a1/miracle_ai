@@ -15,7 +15,7 @@ import SidebarButtonAndLogo from "@/components/header/sidebar-button-and-logo";
 
 export default function Header() {
     const [showAuth, setShowAuth] = useState(false);
-    const {username, loading} = useAuth();
+    const {userId, loading} = useAuth();
     const [showAccountMenu, setShowAccountMenu] = useState(false);
     const [showSidebar, setShowSidebar] = useState(false);
     const avatarRef = useRef<HTMLImageElement>(null);
@@ -35,7 +35,7 @@ export default function Header() {
                 <SidebarButtonAndLogo onSidebarButtonClick={() => setShowSidebar(true)}/>
                 {loading ? (
                     <div className="w-9 h-9 mr-4 bg-separator rounded-full animate-pulse"/>
-                ) : username ? (
+                ) : userId ? (
                     <div className="flex items-center gap-1 mr-4">
                         <Link href="/activity/my-questions" className="p-0 border-0 bg-transparent cursor-pointer block">
                             <Image src={ActivityIcon} alt="Activity" width={44} height={44}/>

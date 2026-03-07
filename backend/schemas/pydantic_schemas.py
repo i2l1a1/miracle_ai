@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class QuestionSchema(BaseModel):
     id: Optional[int] = None
+    user_id: int
     username: str
     title: str
     text: str
@@ -17,6 +18,7 @@ class QuestionSchema(BaseModel):
 
 class AnswerSchema(BaseModel):
     id: Optional[int] = None
+    user_id: int
     username: str
     text: str
     rating: int = 0
@@ -34,15 +36,15 @@ class AnswerWithQuestionSchema(AnswerSchema):
 
 class AnswerCreateSchema(BaseModel):
     question_id: int
+    user_id: int
     username: str
     text: str
-    rating: int = 0
     is_bot: bool = False
 
 
 class VoteSchema(BaseModel):
     answer_id: int
-    username: str
+    user_id: int
     vote_type: int
 
 

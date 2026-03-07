@@ -1,5 +1,6 @@
 export type AddAnswerParams = {
     questionId: number;
+    userId: number;
     username: string;
     text: string;
     rating?: number;
@@ -36,8 +37,8 @@ export type SubmitAnswerCallbacks = {
 
 export type VoteAnswerParams = {
     answerId: number;
-    username: string;
-    voteType: number
+    userId: number;
+    voteType: number;
 };
 export type VoteAnswerResponse = {
     is_ok: boolean;

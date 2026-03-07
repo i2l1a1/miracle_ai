@@ -7,6 +7,12 @@ class QuestionDBModel(Base):
     __tablename__ = "questions"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     username = Column(String, index=True, nullable=False)
     title = Column(String, nullable=False)
     text = Column(Text, nullable=False)
@@ -14,7 +20,7 @@ class QuestionDBModel(Base):
     date_added = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        nullable=False
+        nullable=False,
     )
     status = Column(String(40), default="Answered by AI", nullable=False)
 
@@ -29,6 +35,12 @@ class AnswerDBModel(Base):
         nullable=False,
         index=True,
     )
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     username = Column(String, nullable=False)
     text = Column(Text, nullable=False)
     rating = Column(Integer, default=0, nullable=False)
@@ -36,7 +48,7 @@ class AnswerDBModel(Base):
     date_added = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        nullable=False
+        nullable=False,
     )
 
 
@@ -50,10 +62,17 @@ class VoteDBModel(Base):
         nullable=False,
         index=True,
     )
-    username = Column(String, nullable=False, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     vote_type = Column(Integer, nullable=False)
 
-    __table_args__ = (UniqueConstraint("answer_id", "username", name="uq_vote_answer_username"),)
+    __table_args__ = (
+        UniqueConstraint("answer_id", "user_id", name="uq_vote_answer_user"),
+    )
 
 
 class User(Base):

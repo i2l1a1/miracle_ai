@@ -14,13 +14,13 @@ import {fetchData} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function QuestionDetailContent({question, initialAnswers}: QuestionDetailContentProps) {
-    const {username, loading} = useAuth();
+    const {userId, loading} = useAuth();
     const [answers, setAnswers] = useState<AnswerType[]>(initialAnswers);
     const [showAuthPopup, setShowAuthPopup] = useState(false);
 
     useEffect(() => {
-        if (!username || !question.id) return;
-        fetchData(`${CLIENT_API_URL}/get_question/${question.id}?username=${encodeURIComponent(username)}`)
+        if (!userId || !question.id) return;
+        fetchData(`${CLIENT_API_URL}/get_question/${question.id}`)
             .then((data: { is_ok: boolean; answers: AnswerType[] }) => {
                 if (!data.is_ok) return;
                 const voteById = Object.fromEntries(
@@ -31,7 +31,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 );
             })
             .catch(() => {});
-    }, [username, question.id]);
+    }, [userId, question.id]);
 
     const handleRatingUpdate = (answerId: number, newRating: number | undefined, newVote: number | null) => {
         setAnswers((prev) =>
@@ -52,10 +52,10 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
             <div className="border-t border-b border-separator -mx-4 px-4 py-6">
                 <h2 className="text-block-header text-gray-text mb-5">Your Answer</h2>
                 {loading && <AnswerFormLoading/>}
-                {!loading && username && (
+                {!loading && userId && (
                     <AnswerForm questionId={question.id} onSuccessAction={(answer) => setAnswers((prev) => [...prev, answer])}/>
                 )}
-                {!loading && !username && <AnswerFormLoginPrompt onLoginClickAction={() => setShowAuthPopup(true)}/>}
+                {!loading && !userId && <AnswerFormLoginPrompt onLoginClickAction={() => setShowAuthPopup(true)}/>}
             </div>
             <AnswerList
                 answers={answers}

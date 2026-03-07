@@ -9,24 +9,26 @@ import ActivityAnswerCard, {
 } from "@/components/activity/ActivityAnswerCard";
 
 export default function MyAnswersContent() {
-    const { username } = useAuth();
+    const { userId } = useAuth();
     const [answers, setAnswers] = useState<ActivityAnswerItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!username) return;
+        if (!userId) {
+            setAnswers([]);
+            setLoading(false);
+            return;
+        }
         setLoading(true);
-        fetchData(
-            `${CLIENT_API_URL}/answers_by_user?username=${encodeURIComponent(username)}`
-        )
+        fetchData(`${CLIENT_API_URL}/my-answers`)
             .then((data: ActivityAnswerItem[]) => {
                 setAnswers(Array.isArray(data) ? data : []);
             })
             .catch(() => setAnswers([]))
             .finally(() => setLoading(false));
-    }, [username]);
+    }, [userId]);
 
-    if (!username) {
+    if (!userId) {
         return <p className="text-gray-text">No answers yet.</p>;
     }
     if (loading) {

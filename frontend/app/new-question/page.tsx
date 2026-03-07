@@ -10,7 +10,7 @@ import {createQuestion} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function NewQuestionPage() {
-    const {username} = useAuth();
+    const {username, userId} = useAuth();
     const router = useRouter();
     const [title, setTitle] = useState("");
     const [body, setBody] = useState("");
@@ -19,12 +19,13 @@ export default function NewQuestionPage() {
     const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async () => {
-        if (!username || !title.trim() || !body.trim()) return;
+        if (!userId || !title.trim() || !body.trim()) return;
         setError(null);
         setSubmitting(true);
         try {
             const data = await createQuestion(
                 {
+                    userId,
                     username,
                     title: title.trim(),
                     text: body.trim(),

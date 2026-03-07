@@ -7,7 +7,9 @@ import {
 } from "@/lib/types";
 
 export async function fetchData(url: string) {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        credentials: "include",
+    });
 
     if (!response.ok) {
         throw new Error(
@@ -77,9 +79,9 @@ export async function addAnswer(
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             question_id: params.questionId,
+            user_id: params.userId,
             username: params.username,
             text: params.text.trim(),
-            rating: params.rating ?? 0,
             is_bot: params.isBot ?? false,
         }),
     });
@@ -121,7 +123,7 @@ export async function submitAnswer(
 }
 
 export async function createQuestion(
-    params: { username: string; title: string; text: string; tags?: string[] },
+    params: { userId: number; username: string; title: string; text: string; tags?: string[] },
     apiUrl: string
 ): Promise<{ is_ok: boolean; id?: number; message?: string }> {
     const res = await fetch(`${apiUrl}/add_new_question`, {
@@ -129,6 +131,8 @@ export async function createQuestion(
         credentials: "include",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
+            id: null,
+            user_id: params.userId,
             username: params.username,
             title: params.title.trim(),
             text: params.text.trim(),
@@ -150,7 +154,7 @@ export async function voteAnswer(
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             answer_id: params.answerId,
-            username: params.username,
+            user_id: params.userId,
             vote_type: params.voteType,
         }),
     });

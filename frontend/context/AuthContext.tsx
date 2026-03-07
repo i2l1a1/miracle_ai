@@ -5,7 +5,8 @@ import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 type AuthContextValue = {
     username: string | null;
-    setUsername: (value: string | null) => void;
+    userId: number | null;
+    setAuth: (username: string | null, userId: number | null) => void;
     resetAuth: () => void;
     loading: boolean;
 };
@@ -14,9 +15,15 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({children}: { children: ReactNode }) {
     const [username, setUsername] = useState<string | null>(null);
+    const [userId, setUserId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const resetAuth = () => setUsername(null);
+    const setAuth = (name: string | null, id: number | null) => {
+        setUsername(name);
+        setUserId(id);
+    };
+
+    const resetAuth = () => setAuth(null, null);
 
     useEffect(() => {
         const verifyToken = async () => {
@@ -27,13 +34,13 @@ export function AuthProvider({children}: { children: ReactNode }) {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    setUsername(data.username);
+                    setAuth(data.username ?? null, data.user_id ?? null);
                 } else {
-                    setUsername(null);
+                    resetAuth();
                 }
             } catch (error) {
                 console.error("Failed to verify token:", error);
-                setUsername(null);
+                resetAuth();
             } finally {
                 setLoading(false);
             }
@@ -42,7 +49,7 @@ export function AuthProvider({children}: { children: ReactNode }) {
     }, []);
 
     return (
-        <AuthContext.Provider value={{username, setUsername, resetAuth, loading}}>
+        <AuthContext.Provider value={{username, userId, setAuth, resetAuth, loading}}>
             {children}
         </AuthContext.Provider>
     );

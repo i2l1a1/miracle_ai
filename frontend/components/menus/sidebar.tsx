@@ -11,7 +11,7 @@ import {useAuth} from "@/context/AuthContext";
 import {SidebarProps} from "@/components/menus/types";
 
 export default function Sidebar({onCloseAction, onOpenAuthAction}: SidebarProps) {
-    const {username} = useAuth();
+    const {userId} = useAuth();
     const sidebarRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -23,7 +23,7 @@ export default function Sidebar({onCloseAction, onOpenAuthAction}: SidebarProps)
     }, [onCloseAction]);
 
     const handleNewQuestion = () => {
-        if (!username) {
+        if (!userId) {
             sessionStorage.setItem("redirectAfterLogin", "/new-question");
             onOpenAuthAction?.();
         }
@@ -42,10 +42,10 @@ export default function Sidebar({onCloseAction, onOpenAuthAction}: SidebarProps)
                     <MenuItem
                         icon={NewQuestionIcon}
                         text="New question"
-                        href={username ? "/new-question" : undefined}
+                        href={userId ? "/new-question" : undefined}
                         onClick={handleNewQuestion}
                     />
-                    {username && (
+                    {userId && (
                         <MenuItem icon={ActivityIcon} text="Activity" href="/activity/my-questions" onClick={onCloseAction}/>
                     )}
                     <MenuItem icon={HowItWorksIcon} text="How it works?" href="/how-it-works" onClick={onCloseAction}/>
