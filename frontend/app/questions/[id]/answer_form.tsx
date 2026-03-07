@@ -22,7 +22,7 @@ export default function AnswerForm({questionId, onSuccessAction}: AnswerFormProp
             {
                 questionId,
                 userId,
-                username,
+                username: username as string,
                 text: answerText.trim(),
                 rating: 0,
                 isBot: false,

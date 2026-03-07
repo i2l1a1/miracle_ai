@@ -26,7 +26,7 @@ export default function NewQuestionPage() {
             const data = await createQuestion(
                 {
                     userId,
-                    username,
+                    username: username as string,
                     title: title.trim(),
                     text: body.trim(),
                     tags: tagsStr.trim() ? tagsStr.split(",").map((t) => t.trim()).filter(Boolean) : [],

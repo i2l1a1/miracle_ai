@@ -27,6 +27,11 @@ export type MeResponse = {
     language: string;
 };
 
+type ErrorResponse = {
+    detail?: string;
+    message?: string;
+}
+
 export async function getMe(apiUrl: string): Promise<MeResponse> {
     const res = await fetch(`${apiUrl}/me`, {
         method: "GET",
@@ -64,8 +69,8 @@ export async function deleteAccount(apiUrl: string): Promise<void> {
         credentials: "include",
     });
     if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as any).detail ?? "Failed to delete account");
+        const data: ErrorResponse = await res.json().catch(() => ({}));
+        throw new Error(data.detail ?? "Failed to delete account");
     }
 }
 

@@ -12,7 +12,7 @@ import {deleteAccount, getMe, updateMe} from "@/lib/dataService";
 
 export default function SettingsPage() {
     const router = useRouter();
-    const {username, userId, setAuth, setUsername, resetAuth} = useAuth();
+    const {username, userId, setAuth, resetAuth} = useAuth();
     const [usernameInput, setUsernameInput] = useState("");
     const [language, setLanguage] = useState<"en" | "ru">("en");
     const [questionsCount, setQuestionsCount] = useState(0);
@@ -31,9 +31,6 @@ export default function SettingsPage() {
                 const data = await getMe(CLIENT_API_URL);
                 if (data.username) {
                     setUsernameInput(data.username);
-                    if (!username) {
-                        setUsername(data.username);
-                    }
                 }
                 if (data.language === "ru" || data.language === "en") {
                     setLanguage(data.language);
@@ -46,7 +43,6 @@ export default function SettingsPage() {
             }
         };
         loadMe();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleSave = async () => {
