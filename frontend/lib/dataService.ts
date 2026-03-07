@@ -56,6 +56,17 @@ export async function updateMe(
     return data;
 }
 
+export async function deleteAccount(apiUrl: string): Promise<void> {
+    const res = await fetch(`${apiUrl}/delete-account`, {
+        method: "POST",
+        credentials: "include",
+    });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as any).detail ?? "Failed to delete account");
+    }
+}
+
 export async function addAnswer(
     params: AddAnswerParams,
     apiUrl: string

@@ -62,6 +62,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "questions_count": current_user.questions_count,
         "answers_count": current_user.answers_count,
         "language": current_user.language,
+        "status": current_user.status,
     }
 
 
@@ -112,6 +113,38 @@ async def update_me(
         "answers_count": current_user.answers_count,
         "language": current_user.language,
     }
+
+
+@auth_router.post("/delete-account")
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    old_username = current_user.username
+    current_user.status = "DELETED"
+    # Храним в users уникальное имя, чтобы не ломать уникальный индекс,
+    # а в связанных таблицах показываем просто "[DELETED]".
+    current_user.username = f"[DELETED_{current_user.id}]"
+    await db.flush()
+
+    await db.execute(
+        update(QuestionDBModel)
+        .where(QuestionDBModel.username == old_username)
+        .values(username="[DELETED]")
+    )
+    await db.execute(
+        update(AnswerDBModel)
+        .where(AnswerDBModel.username == old_username)
+        .values(username="[DELETED]")
+    )
+    await db.execute(
+        update(VoteDBModel)
+        .where(VoteDBModel.username == old_username)
+        .values(username="[DELETED]")
+    )
+
+    await db.commit()
+    return {"message": "Account deleted"}
 
 
 @auth_router.post("/logout")

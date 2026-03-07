@@ -2,15 +2,17 @@
 
 import Image from "next/image";
 import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
 import {ProtectedRoute} from "@/components/auth/ProtectedRoute";
 import {useAuth} from "@/context/AuthContext";
 import SingleLineInputField from "@/components/input/single-line-input-field";
 import UserAvatar from "@/public/icons/user-green.svg";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
-import {getMe, updateMe} from "@/lib/dataService";
+import {deleteAccount, getMe, updateMe} from "@/lib/dataService";
 
 export default function SettingsPage() {
-    const {username, setUsername} = useAuth();
+    const router = useRouter();
+    const {username, setUsername, resetAuth} = useAuth();
     const [usernameInput, setUsernameInput] = useState("");
     const [language, setLanguage] = useState<"en" | "ru">("en");
     const [questionsCount, setQuestionsCount] = useState(0);
@@ -125,7 +127,19 @@ export default function SettingsPage() {
                     <div className="mt-5">
                         <button
                             type="button"
-                            className="text-danger-color underline cursor-pointer text-button-text"
+                            className="text-danger-color underline cursor-pointer text-button-text disabled:opacity-50"
+                            disabled={saving}
+                            onClick={async () => {
+                                if (!username) return;
+                                setSaving(true);
+                                try {
+                                    await deleteAccount(CLIENT_API_URL);
+                                    resetAuth();
+                                    router.push("/home");
+                                } finally {
+                                    setSaving(false);
+                                }
+                            }}
                         >
                             Delete my account
                         </button>

@@ -65,3 +65,4 @@ class User(Base):
     questions_count = Column(Integer, default=0, nullable=False)
     answers_count = Column(Integer, default=0, nullable=False)
     language = Column(String(5), default="en", nullable=False)
+    status = Column(String(10), default="ACTIVE", nullable=False)
