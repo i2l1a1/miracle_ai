@@ -74,6 +74,17 @@ export async function deleteAccount(apiUrl: string): Promise<void> {
     }
 }
 
+export async function logoutUser(apiUrl: string): Promise<void> {
+    const res = await fetch(`${apiUrl}/logout`, {
+        method: "POST",
+        credentials: "include",
+    });
+    if (!res.ok) {
+        const data: ErrorResponse = await res.json().catch(() => ({}));
+        throw new Error(data.detail ?? "Failed to logout");
+    }
+}
+
 export async function addAnswer(
     params: AddAnswerParams,
     apiUrl: string

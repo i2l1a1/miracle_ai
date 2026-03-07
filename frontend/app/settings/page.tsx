@@ -8,7 +8,7 @@ import {useAuth} from "@/context/AuthContext";
 import SingleLineInputField from "@/components/input/single-line-input-field";
 import UserAvatar from "@/public/icons/user-green.svg";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
-import {deleteAccount, getMe, updateMe} from "@/lib/dataService";
+import {deleteAccount, getMe, updateMe, logoutUser} from "@/lib/dataService";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -130,6 +130,7 @@ export default function SettingsPage() {
                                 setSaving(true);
                                 try {
                                     await deleteAccount(CLIENT_API_URL);
+                                    await logoutUser(CLIENT_API_URL);
                                     resetAuth();
                                     router.push("/home");
                                 } finally {
