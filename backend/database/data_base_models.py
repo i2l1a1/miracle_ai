@@ -62,3 +62,6 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    questions_count = Column(Integer, default=0, nullable=False)
+    answers_count = Column(Integer, default=0, nullable=False)
+    language = Column(String(5), default="en", nullable=False)

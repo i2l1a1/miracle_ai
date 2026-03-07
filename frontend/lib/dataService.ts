@@ -18,6 +18,44 @@ export async function fetchData(url: string) {
     return await response.json();
 }
 
+export type MeResponse = {
+    username: string;
+    questions_count: number;
+    answers_count: number;
+    language: string;
+};
+
+export async function getMe(apiUrl: string): Promise<MeResponse> {
+    const res = await fetch(`${apiUrl}/me`, {
+        method: "GET",
+        credentials: "include",
+    });
+    if (!res.ok) {
+        throw new Error("Failed to load profile");
+    }
+    return res.json();
+}
+
+export async function updateMe(
+    params: { username: string; language: "en" | "ru" },
+    apiUrl: string
+): Promise<MeResponse> {
+    const res = await fetch(`${apiUrl}/me`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            username: params.username,
+            language: params.language,
+        }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        throw new Error(data.detail ?? "Failed to update profile");
+    }
+    return data;
+}
+
 export async function addAnswer(
     params: AddAnswerParams,
     apiUrl: string

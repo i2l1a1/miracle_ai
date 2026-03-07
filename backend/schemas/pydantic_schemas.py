@@ -49,3 +49,8 @@ class VoteSchema(BaseModel):
 class UserCreateSchema(BaseModel):
     username: str
     password: str
+
+
+class UserUpdateSchema(BaseModel):
+    username: str
+    language: str

@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
 
 from database.auth_crud import authenticate_user_from_db, get_user_by_username_from_db, create_user_in_db
-from database.data_base_models import User
-from schemas.pydantic_schemas import UserCreateSchema
+from database.data_base_models import User, QuestionDBModel, AnswerDBModel, VoteDBModel
+from schemas.pydantic_schemas import UserCreateSchema, UserUpdateSchema
 from security.authSecurity import (
     get_current_user,
     create_access_token,
@@ -13,6 +13,7 @@ from security.authSecurity import (
 )
 from starlette.responses import Response
 from datetime import timedelta
+from sqlalchemy import update
 
 auth_router = APIRouter()
 
@@ -38,7 +39,7 @@ async def login_for_access_token(response: Response, form_data: OAuth2PasswordRe
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     response.set_cookie(key="access_token",
                         value=f"Bearer {access_token}",
@@ -52,6 +53,65 @@ async def login_for_access_token(response: Response, form_data: OAuth2PasswordRe
 @auth_router.get("/verify-token")
 async def verify_user_token(current_user: User = Depends(get_current_user)):
     return {"message": "Token is valid", "username": current_user.username}
+
+
+@auth_router.get("/me")
+async def get_me(current_user: User = Depends(get_current_user)):
+    return {
+        "username": current_user.username,
+        "questions_count": current_user.questions_count,
+        "answers_count": current_user.answers_count,
+        "language": current_user.language,
+    }
+
+
+@auth_router.put("/me")
+async def update_me(
+    payload: UserUpdateSchema,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    old_username = current_user.username
+
+    username_changed = payload.username != current_user.username
+    language_changed = payload.language != current_user.language
+
+    if payload.username != current_user.username:
+        existing = await get_user_by_username_from_db(db, username=payload.username)
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already registered")
+        current_user.username = payload.username
+        await db.flush()
+
+        await db.execute(
+            update(QuestionDBModel)
+            .where(QuestionDBModel.username == old_username)
+            .values(username=payload.username)
+        )
+        await db.execute(
+            update(AnswerDBModel)
+            .where(AnswerDBModel.username == old_username)
+            .values(username=payload.username)
+        )
+        await db.execute(
+            update(VoteDBModel)
+            .where(VoteDBModel.username == old_username)
+            .values(username=payload.username)
+        )
+
+    if language_changed:
+        current_user.language = payload.language
+
+    if username_changed or language_changed:
+        await db.commit()
+        await db.refresh(current_user)
+
+    return {
+        "username": current_user.username,
+        "questions_count": current_user.questions_count,
+        "answers_count": current_user.answers_count,
+        "language": current_user.language,
+    }
 
 
 @auth_router.post("/logout")

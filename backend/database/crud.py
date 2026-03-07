@@ -1,4 +1,4 @@
-from database.data_base_models import QuestionDBModel, AnswerDBModel, VoteDBModel
+from database.data_base_models import QuestionDBModel, AnswerDBModel, VoteDBModel, User
 from schemas.pydantic_schemas import (
     QuestionSchema,
     AnswerSchema,
@@ -31,6 +31,12 @@ async def add_new_question_crud(questions: QuestionSchema):
         new_question = QuestionDBModel(**dict(questions))
 
         db.add(new_question)
+        user_result = await db.execute(
+            select(User).where(User.username == new_question.username)
+        )
+        user = user_result.scalar_one_or_none()
+        if user:
+            user.questions_count += 1
         await db.commit()
         await db.refresh(new_question)
 
@@ -98,6 +104,12 @@ async def add_answer_crud(payload: AnswerCreateSchema):
 
         new_answer = AnswerDBModel(**payload.model_dump())
         db.add(new_answer)
+        user_result = await db.execute(
+            select(User).where(User.username == payload.username)
+        )
+        user = user_result.scalar_one_or_none()
+        if user:
+            user.answers_count += 1
         await db.commit()
         await db.refresh(new_answer)
         return {"is_ok": True, "id": new_answer.id, "answer": AnswerSchema.model_validate(new_answer)}
