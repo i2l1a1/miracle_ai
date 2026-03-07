@@ -27,6 +27,11 @@ class AnswerSchema(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AnswerWithQuestionSchema(AnswerSchema):
+    question_id: int = 0
+    question_title: str = ""
+
+
 class AnswerCreateSchema(BaseModel):
     question_id: int
     username: str

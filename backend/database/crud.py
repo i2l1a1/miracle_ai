@@ -1,5 +1,11 @@
 from database.data_base_models import QuestionDBModel, AnswerDBModel, VoteDBModel
-from schemas.pydantic_schemas import QuestionSchema, AnswerSchema, AnswerCreateSchema, VoteSchema
+from schemas.pydantic_schemas import (
+    QuestionSchema,
+    AnswerSchema,
+    AnswerWithQuestionSchema,
+    AnswerCreateSchema,
+    VoteSchema,
+)
 from database.data_base_init import SessionLocal
 from sqlalchemy import select, and_
 
@@ -95,6 +101,24 @@ async def add_answer_crud(payload: AnswerCreateSchema):
         await db.commit()
         await db.refresh(new_answer)
         return {"is_ok": True, "id": new_answer.id, "answer": AnswerSchema.model_validate(new_answer)}
+
+
+async def get_answers_by_username_crud(username: str):
+    async with SessionLocal() as db:
+        stmt = (
+            select(AnswerDBModel, QuestionDBModel.title)
+            .join(QuestionDBModel, AnswerDBModel.question_id == QuestionDBModel.id)
+            .where(AnswerDBModel.username == username)
+        )
+        rows = (await db.execute(stmt)).all()
+        return [
+            AnswerWithQuestionSchema(
+                **AnswerSchema.model_validate(a).model_dump(),
+                question_id=a.question_id,
+                question_title=title,
+            )
+            for a, title in rows
+        ]
 
 
 async def vote_answer_crud(payload: VoteSchema):

@@ -1,9 +1,10 @@
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import MyAnswersContent from "@/components/activity/MyAnswersContent";
 
 export default function MyAnswersPage() {
     return (
         <ProtectedRoute>
-            <p className="pt-5">my-answers</p>
+            <MyAnswersContent />
         </ProtectedRoute>
     );
 }
