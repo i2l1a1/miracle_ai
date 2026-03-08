@@ -1,7 +1,6 @@
-"use client";
-
 import {createContext, ReactNode, useContext, useEffect, useState} from "react";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
+import { setAuthCallbacks, syncAuthStatusWithBackend } from "@/lib/dataService";
 
 type AuthContextValue = {
     username: string | null;
@@ -26,27 +25,11 @@ export function AuthProvider({children}: { children: ReactNode }) {
     const resetAuth = () => setAuth(null, null);
 
     useEffect(() => {
-        const verifyToken = async () => {
-            try {
-                const response = await fetch(`${CLIENT_API_URL}/verify-token`, {
-                    method: "GET",
-                    credentials: "include",
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setAuth(data.username ?? null, data.user_id ?? null);
-                } else {
-                    resetAuth();
-                }
-            } catch (error) {
-                console.error("Failed to verify token:", error);
-                resetAuth();
-            } finally {
-                setLoading(false);
-            }
-        };
-        verifyToken();
-    }, []);
+        setAuthCallbacks(resetAuth);
+
+        syncAuthStatusWithBackend(CLIENT_API_URL, setAuth, resetAuth, setLoading);
+
+    }, [resetAuth, setAuth, setLoading]);
 
     return (
         <AuthContext.Provider value={{username, userId, setAuth, resetAuth, loading}}>

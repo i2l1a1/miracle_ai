@@ -6,15 +6,79 @@ import {
     VoteAnswerResponse
 } from "@/lib/types";
 
-export async function fetchData(url: string) {
+import {CLIENT_API_URL} from "@/lib/apiConfig";
+
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (value?: any) => void; reject: (reason?: any) => void }> = [];
+
+let authResetCallback: (() => void) | null = null;
+
+export const setAuthCallbacks = (reset: () => void) => {
+    authResetCallback = reset;
+};
+
+const processQueue = (error: any | null, token: string | null = null) => {
+    failedQueue.forEach((prom) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
+export async function fetchData(url: string, options?: RequestInit): Promise<any> {
     const response = await fetch(url, {
         credentials: "include",
+        ...options,
     });
 
+    if (response.status === 401 && url !== `${CLIENT_API_URL}/token` && url !== `${CLIENT_API_URL}/refresh-token`) {
+        if (!isRefreshing) {
+            isRefreshing = true;
+            try {
+                const refreshRes = await fetch(`${CLIENT_API_URL}/refresh-token`, {
+                    method: "POST",
+                    credentials: "include",
+                });
+
+                if (refreshRes.ok) {
+                    isRefreshing = false;
+                    processQueue(null);
+                    
+                    return fetchData(url, options);
+                } else {
+                    isRefreshing = false;
+                    const errorData: ErrorResponse = await refreshRes.json().catch(() => ({}));
+                    if (errorData.detail === "Refresh token missing") {
+                        processQueue(null);
+                        if (authResetCallback) authResetCallback();
+                        return Promise.resolve(null);
+                    } else {
+                        const refreshError = new Error(errorData.detail ?? "Failed to refresh token");
+                        processQueue(refreshError);
+                        if (authResetCallback) authResetCallback();
+                        throw refreshError;
+                    }
+                }
+            } catch (refreshError) {
+                isRefreshing = false;
+                processQueue(refreshError);
+                throw refreshError;
+            } finally {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        } else {
+            return new Promise((resolve, reject) => {
+                failedQueue.push({ resolve, reject });
+            }).then(() => fetchData(url, options));
+        }
+    }
+
     if (!response.ok) {
-        throw new Error(
-            `Failed to fetch questions: ${response.status} ${response.statusText}`
-        );
+        const errorData: ErrorResponse = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || errorData.message || `Failed to fetch: ${response.status} ${response.statusText}`);
     }
 
     return await response.json();
@@ -33,21 +97,18 @@ type ErrorResponse = {
 }
 
 export async function getMe(apiUrl: string): Promise<MeResponse> {
-    const res = await fetch(`${apiUrl}/me`, {
+    const res = await fetchData(`${apiUrl}/me`, {
         method: "GET",
         credentials: "include",
     });
-    if (!res.ok) {
-        throw new Error("Failed to load profile");
-    }
-    return res.json();
+    return res;
 }
 
 export async function updateMe(
     params: { username: string; language: "en" | "ru" },
     apiUrl: string
 ): Promise<MeResponse> {
-    const res = await fetch(`${apiUrl}/me`, {
+    return await fetchData(`${apiUrl}/me`, {
         method: "PUT",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
@@ -56,32 +117,42 @@ export async function updateMe(
             language: params.language,
         }),
     });
-    const data = await res.json();
-    if (!res.ok) {
-        throw new Error(data.detail ?? "Failed to update profile");
-    }
-    return data;
 }
 
 export async function deleteAccount(apiUrl: string): Promise<void> {
-    const res = await fetch(`${apiUrl}/delete-account`, {
+    return await fetchData(`${apiUrl}/delete-account`, {
         method: "POST",
         credentials: "include",
     });
-    if (!res.ok) {
-        const data: ErrorResponse = await res.json().catch(() => ({}));
-        throw new Error(data.detail ?? "Failed to delete account");
-    }
 }
 
 export async function logoutUser(apiUrl: string): Promise<void> {
-    const res = await fetch(`${apiUrl}/logout`, {
+    return await fetchData(`${apiUrl}/logout`, {
         method: "POST",
         credentials: "include",
     });
-    if (!res.ok) {
-        const data: ErrorResponse = await res.json().catch(() => ({}));
-        throw new Error(data.detail ?? "Failed to logout");
+}
+
+export async function syncAuthStatusWithBackend(
+    apiUrl: string,
+    setAuth: (username: string | null, userId: number | null) => void,
+    resetAuth: () => void,
+    setLoading: (loading: boolean) => void
+): Promise<void> {
+    try {
+        const data = await fetchData(`${apiUrl}/verify-token`, {
+            method: "GET",
+            credentials: "include",
+        });
+        if (data) {
+            setAuth(data.username ?? null, data.user_id ?? null);
+        } else {
+            resetAuth();
+        }
+    } catch (error) {
+        console.error("Failed to verify token:", error);
+    } finally {
+        setLoading(false);
     }
 }
 
@@ -89,7 +160,7 @@ export async function addAnswer(
     params: AddAnswerParams,
     apiUrl: string
 ): Promise<AddAnswerResponse> {
-    const response = await fetch(`${apiUrl}/add_answer`, {
+    return await fetchData(`${apiUrl}/add_answer`, {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
@@ -101,14 +172,6 @@ export async function addAnswer(
             is_bot: params.isBot ?? false,
         }),
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message ?? "Failed to add answer");
-    }
-
-    return data;
 }
 
 export async function submitAnswer(
@@ -142,7 +205,7 @@ export async function createQuestion(
     params: { userId: number; username: string; title: string; text: string; tags?: string[] },
     apiUrl: string
 ): Promise<{ is_ok: boolean; id?: number; message?: string }> {
-    const res = await fetch(`${apiUrl}/add_new_question`, {
+    return await fetchData(`${apiUrl}/add_new_question`, {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
@@ -155,16 +218,13 @@ export async function createQuestion(
             tags: params.tags ?? [],
         }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message ?? "Failed to create question");
-    return data;
 }
 
 export async function voteAnswer(
     params: VoteAnswerParams,
     apiUrl: string
 ): Promise<VoteAnswerResponse> {
-    const res = await fetch(`${apiUrl}/vote_answer`, {
+    return await fetchData(`${apiUrl}/vote_answer`, {
         method: "POST",
         credentials: "include",
         headers: {"Content-Type": "application/json"},
@@ -174,7 +234,4 @@ export async function voteAnswer(
             vote_type: params.voteType,
         }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message ?? "Vote failed");
-    return data;
 }

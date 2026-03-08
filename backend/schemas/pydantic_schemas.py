@@ -57,3 +57,7 @@ class UserCreateSchema(BaseModel):
 class UserUpdateSchema(BaseModel):
     username: str
     language: str
+
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str
