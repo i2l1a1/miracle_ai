@@ -8,6 +8,7 @@ from schemas.pydantic_schemas import (
 )
 from database.data_base_init import SessionLocal
 from sqlalchemy import select, and_
+from sqlalchemy.exc import IntegrityError
 
 
 async def get_all_questions_crud():
@@ -249,8 +250,25 @@ async def save_ai_answer_crud(question_id: int, text: str):
         )
         db.add(new_answer)
         question.answers_count += 1
-        await db.commit()
-        await db.refresh(new_answer)
+        try:
+            await db.commit()
+            await db.refresh(new_answer)
+        except IntegrityError:
+            await db.rollback()
+            ex_after = await db.execute(
+                select(AnswerDBModel).where(
+                    AnswerDBModel.question_id == question_id,
+                    AnswerDBModel.is_bot == True,
+                )
+            )
+            row = ex_after.scalar_one_or_none()
+            if row:
+                return {
+                    "is_ok": True,
+                    "created": False,
+                    "answer": AnswerSchema.model_validate(row),
+                }
+            raise
         return {
             "is_ok": True,
             "created": True,

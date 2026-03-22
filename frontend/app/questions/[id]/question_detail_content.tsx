@@ -12,13 +12,15 @@ import AuthPopup from "@/components/auth/auth-popup";
 import {AnswerType, QuestionDetailContentProps} from "@/app/questions/types";
 import {fetchData, generateAiAnswer} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
+import type {GenerateAiAnswerResponse} from "@/lib/dataService";
+
+const aiAnswerInflight = new Map<number, Promise<GenerateAiAnswerResponse>>();
 
 export default function QuestionDetailContent({question, initialAnswers}: QuestionDetailContentProps) {
     const {userId, loading} = useAuth();
     const [answers, setAnswers] = useState<AnswerType[]>(initialAnswers);
     const [showAuthPopup, setShowAuthPopup] = useState(false);
     const [aiLoading, setAiLoading] = useState(false);
-    const aiRequestedRef = useRef(false);
     const answersRef = useRef(answers);
 
     useLayoutEffect(() => {
@@ -26,7 +28,6 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
     }, [answers]);
 
     useEffect(() => {
-        aiRequestedRef.current = false;
         setAiLoading(false);
     }, [question.id]);
 
@@ -49,30 +50,38 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
         if (loading || !userId || !question.id) return;
         if (question.user_id !== userId) return;
         if (answersRef.current.some((a) => a.is_bot)) return;
-        if (aiRequestedRef.current) return;
-        aiRequestedRef.current = true;
+
         let cancelled = false;
         setAiLoading(true);
-        generateAiAnswer(question.id, CLIENT_API_URL)
-            .then((data) => {
-                if (cancelled || !data.is_ok || !data.answer) return;
-                const mapped: AnswerType = {
-                    id: data.answer.id,
-                    username: data.answer.username,
-                    text: data.answer.text,
-                    rating: data.answer.rating ?? 0,
-                    is_bot: data.answer.is_bot ?? true,
-                    date_added: data.answer.date_added,
-                };
-                setAnswers((prev) => {
-                    if (prev.some((a) => a.is_bot)) return prev;
-                    return [...prev.filter((a) => !a.is_bot), mapped];
-                });
-            })
+
+        let p = aiAnswerInflight.get(question.id);
+        if (!p) {
+            p = generateAiAnswer(question.id, CLIENT_API_URL).finally(() => {
+                aiAnswerInflight.delete(question.id);
+            });
+            aiAnswerInflight.set(question.id, p);
+        }
+
+        p.then((data) => {
+            if (cancelled || !data.is_ok || !data.answer) return;
+            const mapped: AnswerType = {
+                id: data.answer.id,
+                username: data.answer.username,
+                text: data.answer.text,
+                rating: data.answer.rating ?? 0,
+                is_bot: data.answer.is_bot ?? true,
+                date_added: data.answer.date_added,
+            };
+            setAnswers((prev) => {
+                if (prev.some((a) => a.is_bot)) return prev;
+                return [...prev.filter((a) => !a.is_bot), mapped];
+            });
+        })
             .catch(() => {})
             .finally(() => {
                 if (!cancelled) setAiLoading(false);
             });
+
         return () => {
             cancelled = true;
         };

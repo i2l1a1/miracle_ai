@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Text, Boolean, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Text, Boolean, ForeignKey, Index, UniqueConstraint
+from sqlalchemy.sql import text as sql_text
 from database.data_base_init import Base
 from datetime import datetime, timezone
 
@@ -50,6 +51,15 @@ class AnswerDBModel(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
+    )
+
+    __table_args__ = (
+        Index(
+            "uq_answers_one_bot_per_question",
+            "question_id",
+            unique=True,
+            postgresql_where=sql_text("is_bot = true"),
+        ),
     )
 
 
