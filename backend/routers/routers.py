@@ -1,5 +1,8 @@
-from fastapi import APIRouter, Depends
+import os
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from services.generation.ai_answer_generate import generate_answer_text
 from database.crud import (
     get_all_questions_crud,
     get_questions_by_user_id_crud,
@@ -9,6 +12,8 @@ from database.crud import (
     get_question_crud,
     add_answer_crud,
     vote_answer_crud,
+    get_ai_answer_if_exists_crud,
+    save_ai_answer_crud,
 )
 from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema
 from security.authSecurity import get_current_user, get_current_user_optional
@@ -73,3 +78,29 @@ async def vote_answer(
 ):
     payload.user_id = current_user.id
     return await vote_answer_crud(payload)
+
+
+@router.post("/generate_ai_answer/{question_id}")
+async def generate_ai_answer(
+    question_id: int,
+):
+    data = await get_question_crud(question_id, None)
+    q = data["question"]
+
+    existing = await get_ai_answer_if_exists_crud(question_id)
+    if existing:
+        return {
+            "is_ok": True,
+            "created": False,
+            "answer": existing.model_dump(),
+        }
+
+    text = generate_answer_text(q.title, q.text)
+
+    saved = await save_ai_answer_crud(question_id, text)
+
+    return {
+        "is_ok": True,
+        "created": saved["created"],
+        "answer": saved["answer"].model_dump(),
+    }

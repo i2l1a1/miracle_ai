@@ -228,3 +228,26 @@ export async function voteAnswer(
         }),
     });
 }
+
+export type GenerateAiAnswerResponse = {
+    is_ok: boolean;
+    created: boolean;
+    answer: {
+        id?: number;
+        username: string;
+        text: string;
+        rating: number;
+        is_bot: boolean;
+        date_added: string;
+    };
+};
+
+export async function generateAiAnswer(
+    questionId: number,
+    apiUrl: string
+): Promise<GenerateAiAnswerResponse> {
+    return await fetchData(`${apiUrl}/generate_ai_answer/${questionId}`, {
+        method: "POST",
+        credentials: "include",
+    });
+}

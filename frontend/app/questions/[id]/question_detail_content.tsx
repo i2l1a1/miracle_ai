@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useLayoutEffect, useRef, useState} from "react";
 import {useAuth} from "@/context/AuthContext";
 import Question from "@/components/questions/Question";
 import {QuestionMode} from "@/global_types/types";
@@ -10,13 +10,25 @@ import AnswerFormLoginPrompt from "@/app/questions/[id]/answer_form_login_prompt
 import AnswerFormLoading from "@/app/questions/[id]/answer_form_loading";
 import AuthPopup from "@/components/auth/auth-popup";
 import {AnswerType, QuestionDetailContentProps} from "@/app/questions/types";
-import {fetchData} from "@/lib/dataService";
+import {fetchData, generateAiAnswer} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function QuestionDetailContent({question, initialAnswers}: QuestionDetailContentProps) {
     const {userId, loading} = useAuth();
     const [answers, setAnswers] = useState<AnswerType[]>(initialAnswers);
     const [showAuthPopup, setShowAuthPopup] = useState(false);
+    const [aiLoading, setAiLoading] = useState(false);
+    const aiRequestedRef = useRef(false);
+    const answersRef = useRef(answers);
+
+    useLayoutEffect(() => {
+        answersRef.current = answers;
+    }, [answers]);
+
+    useEffect(() => {
+        aiRequestedRef.current = false;
+        setAiLoading(false);
+    }, [question.id]);
 
     useEffect(() => {
         if (!userId || !question.id) return;
@@ -32,6 +44,39 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
             })
             .catch(() => {});
     }, [userId, question.id]);
+
+    useEffect(() => {
+        if (loading || !userId || !question.id) return;
+        if (question.user_id !== userId) return;
+        if (answersRef.current.some((a) => a.is_bot)) return;
+        if (aiRequestedRef.current) return;
+        aiRequestedRef.current = true;
+        let cancelled = false;
+        setAiLoading(true);
+        generateAiAnswer(question.id, CLIENT_API_URL)
+            .then((data) => {
+                if (cancelled || !data.is_ok || !data.answer) return;
+                const mapped: AnswerType = {
+                    id: data.answer.id,
+                    username: data.answer.username,
+                    text: data.answer.text,
+                    rating: data.answer.rating ?? 0,
+                    is_bot: data.answer.is_bot ?? true,
+                    date_added: data.answer.date_added,
+                };
+                setAnswers((prev) => {
+                    if (prev.some((a) => a.is_bot)) return prev;
+                    return [...prev.filter((a) => !a.is_bot), mapped];
+                });
+            })
+            .catch(() => {})
+            .finally(() => {
+                if (!cancelled) setAiLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [loading, userId, question.id, question.user_id]);
 
     const handleRatingUpdate = (answerId: number, newRating: number | undefined, newVote: number | null) => {
         setAnswers((prev) =>
@@ -57,6 +102,11 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 )}
                 {!loading && !userId && <AnswerFormLoginPrompt onLoginClickAction={() => setShowAuthPopup(true)}/>}
             </div>
+            {aiLoading && (
+                <div className="border-t border-separator -mx-4 px-4 py-6">
+                    <p className="text-gray-text">Loading...</p>
+                </div>
+            )}
             <AnswerList
                 answers={answers}
                 onRatingUpdateAction={handleRatingUpdate}

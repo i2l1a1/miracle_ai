@@ -148,7 +148,12 @@ async def get_answers_by_user_id_crud(user_id: int):
         stmt = (
             select(AnswerDBModel, QuestionDBModel.title)
             .join(QuestionDBModel, AnswerDBModel.question_id == QuestionDBModel.id)
-            .where(AnswerDBModel.user_id == user_id)
+            .where(
+                and_(
+                    AnswerDBModel.user_id == user_id,
+                    AnswerDBModel.is_bot == False,
+                )
+            )
         )
         rows = (await db.execute(stmt)).all()
         return [
@@ -196,3 +201,58 @@ async def vote_answer_crud(payload: VoteSchema):
         await db.commit()
         await db.refresh(answer)
         return {"is_ok": True, "rating": answer.rating}
+
+
+async def get_ai_answer_if_exists_crud(question_id: int):
+    async with SessionLocal() as db:
+        result = await db.execute(
+            select(AnswerDBModel).where(
+                AnswerDBModel.question_id == question_id,
+                AnswerDBModel.is_bot == True,
+            )
+        )
+        row = result.scalar_one_or_none()
+        if not row:
+            return None
+        return AnswerSchema.model_validate(row)
+
+
+async def save_ai_answer_crud(question_id: int, text: str):
+    async with SessionLocal() as db:
+        ex_result = await db.execute(
+            select(AnswerDBModel).where(
+                AnswerDBModel.question_id == question_id,
+                AnswerDBModel.is_bot == True,
+            )
+        )
+        existing = ex_result.scalar_one_or_none()
+        if existing:
+            return {
+                "is_ok": True,
+                "created": False,
+                "answer": AnswerSchema.model_validate(existing),
+            }
+
+        q_result = await db.execute(
+            select(QuestionDBModel).where(QuestionDBModel.id == question_id)
+        )
+        question = q_result.scalar_one_or_none()
+        if not question:
+            return {"is_ok": False, "message": f"Question with id {question_id} not found"}
+
+        new_answer = AnswerDBModel(
+            question_id=question_id,
+            user_id=question.user_id,
+            username="AI BOT",
+            text=text,
+            is_bot=True,
+        )
+        db.add(new_answer)
+        question.answers_count += 1
+        await db.commit()
+        await db.refresh(new_answer)
+        return {
+            "is_ok": True,
+            "created": True,
+            "answer": AnswerSchema.model_validate(new_answer),
+        }
