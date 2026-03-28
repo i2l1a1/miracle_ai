@@ -6,11 +6,19 @@ import SmallArrow from "@/public/icons/small-arrow.svg";
 import SingleLineInputField from "@/components/input/single-line-input-field";
 import {HomeSortOption} from "@/app/home/applyHomeFilters";
 import {FilterProps} from "@/components/filter/types";
+import {pluralEn} from "@/lib/pluralize";
+
+const SORT_OPTIONS: {value: HomeSortOption; label: string}[] = [
+  {value: "newest", label: "Newest"},
+  {value: "oldest", label: "Oldest"},
+  {value: "most_answers", label: "Most answers"},
+  {value: "fewest_answers", label: "Fewest answers"},
+];
 
 export default function Filter({questionsCount, onApply}: FilterProps) {
   const [open, setOpen] = useState(false);
   const [onlyAiAnswered, setOnlyAiAnswered] = useState(false);
-  const [sortBy, setSortBy] = useState<HomeSortOption>("date");
+  const [sortBy, setSortBy] = useState<HomeSortOption>("newest");
   const [tagsRaw, setTagsRaw] = useState("");
 
   const handleApplyClick = () => {
@@ -22,7 +30,9 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
       <div
         className={`flex items-center justify-between px-4 pt-5 ${open ? "pb-0" : "pb-5"}`}
       >
-        <p className="text-gray-text">{questionsCount} questions</p>
+        <p className="text-gray-text">
+          {questionsCount} {pluralEn(questionsCount, "question", "questions")}
+        </p>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -53,26 +63,21 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
           <div className="flex flex-col gap-3">
             <p className="font-bold text-bright-text">Sort by</p>
             <div className="flex flex-col gap-2">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="home-sort"
-                  checked={sortBy === "date"}
-                  onChange={() => setSortBy("date")}
-                  className="accent-accent cursor-pointer"
-                />
-                <span>Date</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  name="home-sort"
-                  checked={sortBy === "answers_count"}
-                  onChange={() => setSortBy("answers_count")}
-                  className="accent-accent cursor-pointer"
-                />
-                <span>Number of answers</span>
-              </label>
+              {SORT_OPTIONS.map(({value, label}) => (
+                <label
+                  key={value}
+                  className="flex items-center gap-3 cursor-pointer"
+                >
+                  <input
+                    type="radio"
+                    name="home-sort"
+                    checked={sortBy === value}
+                    onChange={() => setSortBy(value)}
+                    className="accent-accent cursor-pointer"
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
             </div>
           </div>
           <div className="flex flex-col gap-3">

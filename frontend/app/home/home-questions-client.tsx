@@ -14,7 +14,7 @@ import {QuestionMode} from "@/global_types/types";
 
 const defaultFilter: HomeFilterValues = {
     onlyAiAnswered: false,
-    sortBy: "date",
+    sortBy: "newest",
     tags: [],
 };
 
@@ -44,7 +44,7 @@ export default function HomeQuestionsClient({
 
     return (
         <>
-            <Filter questionsCount={questions.length} onApply={handleApply}/>
+            <Filter questionsCount={displayed.length} onApply={handleApply}/>
             {displayed.length === 0 ? (
                 <p className="text-gray-text py-8">No questions match the filter.</p>
             ) : (

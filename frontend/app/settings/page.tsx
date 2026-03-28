@@ -9,6 +9,7 @@ import SingleLineInputField from "@/components/input/single-line-input-field";
 import UserAvatar from "@/public/icons/user-green.svg";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import {deleteAccount, getMe, updateMe, logoutUser} from "@/lib/dataService";
+import {pluralEn} from "@/lib/pluralize";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -65,7 +66,7 @@ export default function SettingsPage() {
     const statsText =
         questionsCount === 0 && answersCount === 0
             ? "No activity yet"
-            : `${questionsCount} questions · ${answersCount} answers`;
+            : `${questionsCount} ${pluralEn(questionsCount, "question", "questions")} · ${answersCount} ${pluralEn(answersCount, "answer", "answers")}`;
 
     return (
         <ProtectedRoute>

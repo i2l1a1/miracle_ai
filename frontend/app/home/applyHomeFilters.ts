@@ -1,6 +1,10 @@
 import {HomePageQuestionProps} from "@/app/home/types";
 
-export type HomeSortOption = "date" | "answers_count";
+export type HomeSortOption =
+    | "newest"
+    | "oldest"
+    | "most_answers"
+    | "fewest_answers";
 
 export type HomeFilterValues = {
     onlyAiAnswered: boolean;
@@ -33,12 +37,20 @@ export function applyHomeFilters(
     }
 
     list.sort((a, b) => {
-        if (filter.sortBy === "date") {
-            return (
-                new Date(b.date_added).getTime() - new Date(a.date_added).getTime()
-            );
+        const ta = new Date(a.date_added).getTime();
+        const tb = new Date(b.date_added).getTime();
+        switch (filter.sortBy) {
+            case "newest":
+                return tb - ta;
+            case "oldest":
+                return ta - tb;
+            case "most_answers":
+                return b.answers_count - a.answers_count;
+            case "fewest_answers":
+                return a.answers_count - b.answers_count;
+            default:
+                return 0;
         }
-        return b.answers_count - a.answers_count;
     });
 
     return list;

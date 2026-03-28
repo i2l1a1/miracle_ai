@@ -1,4 +1,5 @@
 import {HomePageQuestionProps} from "@/app/home/types";
+import {pluralEn} from "@/lib/pluralize";
 import Tag from "@/components/tags/Tag";
 import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
@@ -37,7 +38,7 @@ export default function Question({
                     <p className="text-gray-text">
                         {question.answers_count === 0
                             ? "Answered by AI"
-                            : `${question.answers_count} answers + AI`}
+                            : `${question.answers_count} ${pluralEn(question.answers_count, "answer", "answers")} + AI`}
                     </p>
                 </div>
             </div>

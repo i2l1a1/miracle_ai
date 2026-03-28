@@ -126,13 +126,13 @@ async def add_answer_crud(payload: AnswerCreateSchema):
             select(QuestionDBModel).where(QuestionDBModel.id == payload.question_id)
         )
         question = question_result.scalar_one_or_none()
-        if question:
+        if question and not payload.is_bot:
             question.answers_count += 1
         user_result = await db.execute(
             select(User).where(User.id == payload.user_id)
         )
         user = user_result.scalar_one_or_none()
-        if user:
+        if user and not payload.is_bot:
             user.answers_count += 1
         await db.commit()
         await db.refresh(new_answer)
@@ -249,7 +249,6 @@ async def save_ai_answer_crud(question_id: int, text: str):
             is_bot=True,
         )
         db.add(new_answer)
-        question.answers_count += 1
         try:
             await db.commit()
             await db.refresh(new_answer)
