@@ -7,6 +7,25 @@ services:
       - ./backend/.env
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+
+  flyway:
+    image: flyway/flyway:11-alpine
+    command: migrate
+    env_file:
+      - ./backend/.env
+    environment:
+      FLYWAY_URL: jdbc:postgresql://db:5432/miracle_db
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+      FLYWAY_BASELINE_VERSION: "1"
+    volumes:
+      - ./backend/flyway/sql:/flyway/sql
+    depends_on:
+      db:
+        condition: service_healthy
+
   sever:
     build: ./backend
     env_file:
@@ -16,7 +35,10 @@ services:
     volumes:
       - ./backend:/app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
   frontend:
     build: ./frontend
     ports:
