@@ -1,0 +1,1 @@
+ALTER TABLE question_tags ALTER COLUMN tag TYPE TEXT;

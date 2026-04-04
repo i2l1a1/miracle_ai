@@ -1,7 +1,21 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Text, Boolean, ForeignKey, Index, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.sql import text as sql_text
 from database.data_base_init import Base
 from datetime import datetime, timezone
+from sqlalchemy.orm import relationship
+
+
+class QuestionTagDBModel(Base):
+    __tablename__ = "question_tags"
+
+    question_id = Column(
+        Integer,
+        ForeignKey("questions.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    tag = Column(Text, primary_key=True)
+
+    question = relationship("QuestionDBModel", back_populates="tag_rows")
 
 
 class QuestionDBModel(Base):
@@ -17,7 +31,6 @@ class QuestionDBModel(Base):
     username = Column(String, index=True, nullable=False)
     title = Column(String, nullable=False)
     text = Column(Text, nullable=False)
-    tags = Column(JSON, nullable=True)
     date_added = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -26,6 +39,17 @@ class QuestionDBModel(Base):
     status = Column(String(40), default="Answered by AI", nullable=False)
     answers_count = Column(Integer, default=0, nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
+
+    tag_rows = relationship(
+        "QuestionTagDBModel",
+        back_populates="question",
+        cascade="all, delete-orphan",
+        order_by=QuestionTagDBModel.tag,
+    )
+
+    @property
+    def tags(self) -> list[str]:
+        return [r.tag for r in self.tag_rows]
 
 
 class AnswerDBModel(Base):

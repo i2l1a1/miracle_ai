@@ -1,4 +1,10 @@
-from database.data_base_models import QuestionDBModel, AnswerDBModel, VoteDBModel, User
+from database.data_base_models import (
+    QuestionDBModel,
+    QuestionTagDBModel,
+    AnswerDBModel,
+    VoteDBModel,
+    User,
+)
 from schemas.pydantic_schemas import (
     QuestionSchema,
     AnswerSchema,
@@ -6,15 +12,20 @@ from schemas.pydantic_schemas import (
     AnswerCreateSchema,
     VoteSchema,
 )
+from typing import List, Optional
+
 from database.data_base_init import SessionLocal
 from sqlalchemy import select, and_
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 
 
 async def get_all_questions_crud():
     async with SessionLocal() as db:
         result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.is_deleted.is_(False))
+            select(QuestionDBModel)
+            .options(selectinload(QuestionDBModel.tag_rows))
+            .where(QuestionDBModel.is_deleted.is_(False))
         )
         questions = result.scalars().all()
         return [QuestionSchema.model_validate(q) for q in questions]
@@ -23,7 +34,9 @@ async def get_all_questions_crud():
 async def get_questions_by_user_id_crud(user_id: int):
     async with SessionLocal() as db:
         result = await db.execute(
-            select(QuestionDBModel).where(
+            select(QuestionDBModel)
+            .options(selectinload(QuestionDBModel.tag_rows))
+            .where(
                 QuestionDBModel.user_id == user_id,
                 QuestionDBModel.is_deleted.is_(False),
             )
@@ -32,9 +45,25 @@ async def get_questions_by_user_id_crud(user_id: int):
         return [QuestionSchema.model_validate(q) for q in questions]
 
 
+def _normalize_question_tags(raw: Optional[List[str]]) -> List[str]:
+    seen: set = set()
+    out: List[str] = []
+    for t in raw or []:
+        s = (t or "").strip()
+        if s and s not in seen:
+            seen.add(s)
+            out.append(s)
+    return out
+
+
 async def add_new_question_crud(question: QuestionSchema):
     async with SessionLocal() as db:
-        new_question = QuestionDBModel(**dict(question))
+        payload = question.model_dump(exclude={"tags"})
+        if payload.get("id") is None:
+            payload.pop("id", None)
+        new_question = QuestionDBModel(**payload)
+        for tag in _normalize_question_tags(question.tags):
+            new_question.tag_rows.append(QuestionTagDBModel(tag=tag))
 
         db.add(new_question)
         user_result = await db.execute(
@@ -124,7 +153,9 @@ async def soft_delete_answer_crud(answer_id: int, owner_user_id: int) -> dict:
 async def get_question_crud(question_id: int, user_id: int | None = None):
     async with SessionLocal() as db:
         q_result = await db.execute(
-            select(QuestionDBModel).where(
+            select(QuestionDBModel)
+            .options(selectinload(QuestionDBModel.tag_rows))
+            .where(
                 QuestionDBModel.id == question_id,
                 QuestionDBModel.is_deleted.is_(False),
             )
