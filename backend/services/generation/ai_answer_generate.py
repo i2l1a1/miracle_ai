@@ -13,6 +13,7 @@ def _build_chat() -> ChatOpenAI:
         api_key=os.getenv("OPENROUTER_API_KEY"),
         model=os.getenv("OPENROUTER_MODEL", "arcee-ai/trinity-mini:free"),
         extra_body={"reasoning": {"enabled": True}},
+        max_tokens=4096,
     )
 
 

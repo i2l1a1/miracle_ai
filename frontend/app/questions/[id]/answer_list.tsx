@@ -83,7 +83,7 @@ function AnswerItem({
         <div className={`py-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
             <AvatarAndUsernameHolder username={answer.username} isBot={answer.is_bot}/>
             <div className="mt-5">
-                <p className="text-text">{answer.text}</p>
+                <p className="text-text whitespace-pre-line">{answer.text}</p>
             </div>
             <div className="flex items-center justify-between gap-2 mt-4">
                 <div className="flex items-center gap-2">
