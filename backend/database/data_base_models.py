@@ -25,6 +25,7 @@ class QuestionDBModel(Base):
     )
     status = Column(String(40), default="Answered by AI", nullable=False)
     answers_count = Column(Integer, default=0, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False)
 
 
 class AnswerDBModel(Base):
@@ -52,13 +53,14 @@ class AnswerDBModel(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+    is_deleted = Column(Boolean, default=False, nullable=False)
 
     __table_args__ = (
         Index(
             "uq_answers_one_bot_per_question",
             "question_id",
             unique=True,
-            postgresql_where=sql_text("is_bot = true"),
+            postgresql_where=sql_text("is_bot = true AND is_deleted = false"),
         ),
     )
 

@@ -48,6 +48,10 @@ export default function MyQuestionsContent() {
                     }}
                     mode={QuestionMode.HOME_PAGE}
                     showTopBorder={index > 0}
+                    showOwnerMenu
+                    onQuestionDeleted={() =>
+                        setQuestions((prev) => prev.filter((x) => x.id !== q.id))
+                    }
                 />
             ))}
         </div>

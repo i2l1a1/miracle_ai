@@ -1,6 +1,6 @@
 "use client";
 
-import {useMemo, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import Filter from "@/components/filter/filter";
 import Question from "@/components/questions/Question";
 import {HomePageQuestionProps} from "@/app/home/types";
@@ -11,6 +11,7 @@ import {
     parseTagsInput,
 } from "@/app/home/applyHomeFilters";
 import {QuestionMode} from "@/global_types/types";
+import {useAuth} from "@/context/AuthContext";
 
 const defaultFilter: HomeFilterValues = {
     onlyAiAnswered: false,
@@ -23,11 +24,17 @@ export default function HomeQuestionsClient({
 }: {
     questions: HomePageQuestionProps[];
 }) {
+    const {userId} = useAuth();
+    const [localQuestions, setLocalQuestions] = useState(questions);
     const [appliedFilter, setAppliedFilter] = useState<HomeFilterValues>(defaultFilter);
 
+    useEffect(() => {
+        setLocalQuestions(questions);
+    }, [questions]);
+
     const displayed = useMemo(
-        () => applyHomeFilters(questions, appliedFilter),
-        [questions, appliedFilter]
+        () => applyHomeFilters(localQuestions, appliedFilter),
+        [localQuestions, appliedFilter]
     );
 
     const handleApply = (form: {
@@ -54,6 +61,10 @@ export default function HomeQuestionsClient({
                         question={question}
                         mode={QuestionMode.HOME_PAGE}
                         showTopBorder={index > 0}
+                        showOwnerMenu={userId != null && question.user_id === userId}
+                        onQuestionDeleted={() =>
+                            setLocalQuestions((prev) => prev.filter((q) => q.id !== question.id))
+                        }
                     />
                 ))
             )}

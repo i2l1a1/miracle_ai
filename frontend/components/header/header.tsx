@@ -29,7 +29,7 @@ export default function Header() {
     }, [showSidebar]);
 
     return (
-        <div className="sticky top-0 z-20 border-b border-separator h-16 -mx-4 box-border">
+        <div className="sticky top-0 z-30 border-b border-separator h-16 -mx-4 box-border">
             <div
                 className="flex items-center justify-between h-full py-[10px] bg-blur-background">
                 <SidebarButtonAndLogo onSidebarButtonClick={() => setShowSidebar(true)}/>

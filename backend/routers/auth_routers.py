@@ -124,12 +124,18 @@ async def update_me(
         await db.flush()
         await db.execute(
             update(QuestionDBModel)
-            .where(QuestionDBModel.user_id == current_user.id)
+            .where(
+                QuestionDBModel.user_id == current_user.id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
             .values(username=payload.username)
         )
         await db.execute(
             update(AnswerDBModel)
-            .where(AnswerDBModel.user_id == current_user.id)
+            .where(
+                AnswerDBModel.user_id == current_user.id,
+                AnswerDBModel.is_deleted.is_(False),
+            )
             .values(username=payload.username)
         )
 

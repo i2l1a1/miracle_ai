@@ -5,15 +5,22 @@ import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
 import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-holder";
 import MultilineText from "@/components/text/multiline-text";
+import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
+import {deleteQuestion} from "@/lib/dataService";
+import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function Question({
     question,
     mode,
     showTopBorder = false,
+    showOwnerMenu = false,
+    onQuestionDeleted,
 }: {
     question: HomePageQuestionProps;
     mode: QuestionMode;
     showTopBorder?: boolean;
+    showOwnerMenu?: boolean;
+    onQuestionDeleted?: () => void;
 }) {
     const formattedDateAdded = new Intl.DateTimeFormat("en-US", {
         dateStyle: "short",
@@ -21,41 +28,77 @@ export default function Question({
         timeZone: "UTC",
     }).format(new Date(question.date_added));
 
-    const content = (
-        <div className={`pt-6 mb-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
-            <div className="flex flex-col gap-5">
-                <AvatarAndUsernameHolder username={question.username}/>
-                <div>
-                    <MultilineText
-                        text={question.title}
-                        className="text-question-header text-bright-text font-bold mb-2"
-                    />
-                    <MultilineText text={question.text}/>
-                    <div className="flex-wrap flex gap-2 mt-4">
-                        {question.tags.map(tagText => {
-                            return <Tag tagText={tagText} key={tagText}/>;
-                        })}
-                    </div>
+    const menu =
+        showOwnerMenu && onQuestionDeleted ? (
+            <DeleteOverflowMenu
+                ariaLabel="Question actions"
+                onDelete={() => deleteQuestion(question.id, CLIENT_API_URL)}
+                onDeleted={onQuestionDeleted}
+            />
+        ) : null;
+
+    const bodyBlock = (
+        <div className="flex flex-col">
+            <div>
+                <MultilineText
+                    text={question.title}
+                    className="text-question-header text-bright-text font-bold mb-2"
+                />
+                <MultilineText text={question.text} />
+                <div className="flex-wrap flex gap-2 mt-4">
+                    {question.tags.map((tagText) => (
+                        <Tag tagText={tagText} key={tagText} />
+                    ))}
                 </div>
-                <div className="flex justify-between gap-2">
-                    <p className="text-gray-text">{formattedDateAdded}</p>
-                    <p className="text-gray-text">
-                        {question.answers_count === 0
-                            ? "Answered by AI"
-                            : `${question.answers_count} ${pluralEn(question.answers_count, "answer", "answers")} + AI`}
-                    </p>
-                </div>
+            </div>
+            <div className="flex justify-between gap-2 mt-[20px]">
+                <p className="text-gray-text">{formattedDateAdded}</p>
+                <p className="text-gray-text">
+                    {question.answers_count === 0
+                        ? "Answered by AI"
+                        : `${question.answers_count} ${pluralEn(question.answers_count, "answer", "answers")} + AI`}
+                </p>
             </div>
         </div>
     );
 
     if (mode === QuestionMode.HOME_PAGE) {
         return (
-            <Link href={`/questions/${question.id}`}>
-                {content}
-            </Link>
+            <div
+                className={`pt-6 mb-6 relative ${showTopBorder ? "border-t border-separator" : ""}`}
+            >
+                <Link
+                    href={`/questions/${question.id}`}
+                    className="absolute inset-0 z-0 rounded-sm"
+                    tabIndex={-1}
+                    aria-hidden
+                />
+                <div className="relative z-10 flex flex-col gap-5 pointer-events-none">
+                    <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                        <div className="min-w-0 pointer-events-none [&_*]:pointer-events-none">
+                            <AvatarAndUsernameHolder username={question.username} />
+                        </div>
+                        {menu ? (
+                            <div className="shrink-0 pointer-events-auto">{menu}</div>
+                        ) : null}
+                    </div>
+                    <div className="pointer-events-none [&_*]:pointer-events-none">{bodyBlock}</div>
+                </div>
+            </div>
         );
     }
 
-    return content;
+    return (
+        <div className={`pt-6 mb-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
+            <div className="flex flex-col gap-5">
+                <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                    <div className="min-w-0">
+                        <AvatarAndUsernameHolder username={question.username} />
+                    </div>
+                    {menu}
+                </div>
+                {bodyBlock}
+            </div>
+        </div>
+    );
 }

@@ -8,6 +8,7 @@ export type QuestionInnerProps = {
 
 export type AnswerType = {
     id?: number
+    user_id?: number
     username: string
     text: string
     rating: number
@@ -20,6 +21,7 @@ export type AnswerListProps = {
     answers: AnswerType[];
     onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
     onAuthRequiredAction: () => void;
+    onAnswerDeleted: (answerId: number) => void;
 }
 
 export type QuestionDetailContentProps = {

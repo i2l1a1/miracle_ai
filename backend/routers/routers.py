@@ -8,7 +8,8 @@ from database.crud import (
     get_questions_by_user_id_crud,
     get_answers_by_user_id_crud,
     add_new_question_crud,
-    delete_question_crud,
+    soft_delete_question_crud,
+    soft_delete_answer_crud,
     get_question_crud,
     add_answer_crud,
     vote_answer_crud,
@@ -48,8 +49,35 @@ async def add_new_question(
 
 
 @router.delete("/delete_question/{question_id}")
-async def delete_question(question_id: int):
-    return await delete_question_crud(question_id)
+async def delete_question(
+    question_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    result = await soft_delete_question_crud(question_id, current_user.id)
+    if not result["is_ok"]:
+        if result.get("error") == "forbidden":
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail="Not allowed to delete this question",
+            )
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Question not found")
+    return result
+
+
+@router.delete("/delete_answer/{answer_id}")
+async def delete_answer(
+    answer_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    result = await soft_delete_answer_crud(answer_id, current_user.id)
+    if not result["is_ok"]:
+        if result.get("error") == "forbidden":
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail="Not allowed to delete this answer",
+            )
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Answer not found")
+    return result
 
 
 @router.get("/get_question/{question_id}")
@@ -85,6 +113,11 @@ async def generate_ai_answer(
     question_id: int,
 ):
     data = await get_question_crud(question_id, None)
+    if not data["is_ok"]:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail=data.get("message", "Question not found"),
+        )
     q = data["question"]
 
     existing = await get_ai_answer_if_exists_crud(question_id)

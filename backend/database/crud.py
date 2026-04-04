@@ -13,7 +13,9 @@ from sqlalchemy.exc import IntegrityError
 
 async def get_all_questions_crud():
     async with SessionLocal() as db:
-        result = await db.execute(select(QuestionDBModel))
+        result = await db.execute(
+            select(QuestionDBModel).where(QuestionDBModel.is_deleted.is_(False))
+        )
         questions = result.scalars().all()
         return [QuestionSchema.model_validate(q) for q in questions]
 
@@ -21,7 +23,10 @@ async def get_all_questions_crud():
 async def get_questions_by_user_id_crud(user_id: int):
     async with SessionLocal() as db:
         result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.user_id == user_id)
+            select(QuestionDBModel).where(
+                QuestionDBModel.user_id == user_id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
         )
         questions = result.scalars().all()
         return [QuestionSchema.model_validate(q) for q in questions]
@@ -44,26 +49,85 @@ async def add_new_question_crud(question: QuestionSchema):
         return {"is_ok": True, "id": new_question.id}
 
 
-async def delete_question_crud(question_id: int):
+async def soft_delete_question_crud(question_id: int, owner_user_id: int) -> dict:
     async with SessionLocal() as db:
-        result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.id == question_id)
+        q_result = await db.execute(
+            select(QuestionDBModel).where(
+                QuestionDBModel.id == question_id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
         )
-        question = result.scalar_one_or_none()
-
+        question = q_result.scalar_one_or_none()
         if not question:
-            return {"is_ok": False, "message": f"Question with id {question_id} not found"}
+            return {"is_ok": False, "error": "not_found"}
+        if question.user_id != owner_user_id:
+            return {"is_ok": False, "error": "forbidden"}
 
-        await db.delete(question)
+        a_result = await db.execute(
+            select(AnswerDBModel).where(
+                AnswerDBModel.question_id == question_id,
+                AnswerDBModel.is_deleted.is_(False),
+            )
+        )
+        for answer in a_result.scalars().all():
+            answer.is_deleted = True
+            if not answer.is_bot:
+                u = await db.get(User, answer.user_id)
+                if u and u.answers_count > 0:
+                    u.answers_count -= 1
+
+        question.answers_count = 0
+        question.is_deleted = True
+        owner = await db.get(User, question.user_id)
+        if owner and owner.questions_count > 0:
+            owner.questions_count -= 1
+
         await db.commit()
-
         return {"is_ok": True, "id": question_id}
+
+
+async def soft_delete_answer_crud(answer_id: int, owner_user_id: int) -> dict:
+    async with SessionLocal() as db:
+        a_result = await db.execute(
+            select(AnswerDBModel).where(
+                AnswerDBModel.id == answer_id,
+                AnswerDBModel.is_deleted.is_(False),
+            )
+        )
+        answer = a_result.scalar_one_or_none()
+        if not answer:
+            return {"is_ok": False, "error": "not_found"}
+        if answer.user_id != owner_user_id:
+            return {"is_ok": False, "error": "forbidden"}
+
+        q_result = await db.execute(
+            select(QuestionDBModel).where(
+                QuestionDBModel.id == answer.question_id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
+        )
+        question = q_result.scalar_one_or_none()
+        if not question:
+            return {"is_ok": False, "error": "not_found"}
+
+        answer.is_deleted = True
+        if not answer.is_bot:
+            question.answers_count = max(0, question.answers_count - 1)
+            u = await db.get(User, answer.user_id)
+            if u and u.answers_count > 0:
+                u.answers_count -= 1
+
+        await db.commit()
+        return {"is_ok": True, "id": answer_id}
 
 
 async def get_question_crud(question_id: int, user_id: int | None = None):
     async with SessionLocal() as db:
         q_result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.id == question_id)
+            select(QuestionDBModel).where(
+                QuestionDBModel.id == question_id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
         )
         question = q_result.scalar_one_or_none()
         if not question:
@@ -79,7 +143,10 @@ async def get_question_crud(question_id: int, user_id: int | None = None):
                         VoteDBModel.user_id == user_id,
                     ),
                 )
-                .where(AnswerDBModel.question_id == question_id)
+                .where(
+                    AnswerDBModel.question_id == question_id,
+                    AnswerDBModel.is_deleted.is_(False),
+                )
             )
             rows = (await db.execute(stmt)).all()
             answers_data = []
@@ -89,7 +156,10 @@ async def get_question_crud(question_id: int, user_id: int | None = None):
                 answers_data.append(d)
         else:
             a_result = await db.execute(
-                select(AnswerDBModel).where(AnswerDBModel.question_id == question_id)
+                select(AnswerDBModel).where(
+                    AnswerDBModel.question_id == question_id,
+                    AnswerDBModel.is_deleted.is_(False),
+                )
             )
             answers = a_result.scalars().all()
             answers_data = [
@@ -106,7 +176,10 @@ async def get_question_crud(question_id: int, user_id: int | None = None):
 async def add_answer_crud(payload: AnswerCreateSchema):
     async with SessionLocal() as db:
         q_result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.id == payload.question_id)
+            select(QuestionDBModel).where(
+                QuestionDBModel.id == payload.question_id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
         )
         if q_result.scalar_one_or_none() is None:
             return {
@@ -123,7 +196,10 @@ async def add_answer_crud(payload: AnswerCreateSchema):
         )
         db.add(new_answer)
         question_result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.id == payload.question_id)
+            select(QuestionDBModel).where(
+                QuestionDBModel.id == payload.question_id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
         )
         question = question_result.scalar_one_or_none()
         if question and not payload.is_bot:
@@ -153,6 +229,8 @@ async def get_answers_by_user_id_crud(user_id: int):
                 and_(
                     AnswerDBModel.user_id == user_id,
                     AnswerDBModel.is_bot == False,
+                    AnswerDBModel.is_deleted.is_(False),
+                    QuestionDBModel.is_deleted.is_(False),
                 )
             )
         )
@@ -170,7 +248,10 @@ async def get_answers_by_user_id_crud(user_id: int):
 async def vote_answer_crud(payload: VoteSchema):
     async with SessionLocal() as db:
         a_result = await db.execute(
-            select(AnswerDBModel).where(AnswerDBModel.id == payload.answer_id)
+            select(AnswerDBModel).where(
+                AnswerDBModel.id == payload.answer_id,
+                AnswerDBModel.is_deleted.is_(False),
+            )
         )
         answer = a_result.scalar_one_or_none()
         if not answer:
@@ -210,6 +291,7 @@ async def get_ai_answer_if_exists_crud(question_id: int):
             select(AnswerDBModel).where(
                 AnswerDBModel.question_id == question_id,
                 AnswerDBModel.is_bot == True,
+                AnswerDBModel.is_deleted.is_(False),
             )
         )
         row = result.scalar_one_or_none()
@@ -224,6 +306,7 @@ async def save_ai_answer_crud(question_id: int, text: str):
             select(AnswerDBModel).where(
                 AnswerDBModel.question_id == question_id,
                 AnswerDBModel.is_bot == True,
+                AnswerDBModel.is_deleted.is_(False),
             )
         )
         existing = ex_result.scalar_one_or_none()
@@ -235,7 +318,10 @@ async def save_ai_answer_crud(question_id: int, text: str):
             }
 
         q_result = await db.execute(
-            select(QuestionDBModel).where(QuestionDBModel.id == question_id)
+            select(QuestionDBModel).where(
+                QuestionDBModel.id == question_id,
+                QuestionDBModel.is_deleted.is_(False),
+            )
         )
         question = q_result.scalar_one_or_none()
         if not question:
@@ -258,6 +344,7 @@ async def save_ai_answer_crud(question_id: int, text: str):
                 select(AnswerDBModel).where(
                     AnswerDBModel.question_id == question_id,
                     AnswerDBModel.is_bot == True,
+                    AnswerDBModel.is_deleted.is_(False),
                 )
             )
             row = ex_after.scalar_one_or_none()

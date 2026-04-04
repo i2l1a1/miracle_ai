@@ -12,6 +12,7 @@ export type AddAnswerResponse = {
     id?: number;
     answer?: {
         id: number;
+        user_id: number;
         username: string;
         text: string;
         rating: number;
@@ -24,6 +25,7 @@ export type AddAnswerResponse = {
 export type SubmitAnswerCallbacks = {
     onSuccess: (answer: {
         id: number;
+        user_id: number;
         username: string;
         text: string;
         rating: number;

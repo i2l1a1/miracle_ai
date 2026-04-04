@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect, useLayoutEffect, useRef, useState} from "react";
+import {useRouter} from "next/navigation";
 import {useAuth} from "@/context/AuthContext";
 import Question from "@/components/questions/Question";
 import {QuestionMode} from "@/global_types/types";
@@ -17,6 +18,7 @@ import type {GenerateAiAnswerResponse} from "@/lib/dataService";
 const aiAnswerInflight = new Map<number, Promise<GenerateAiAnswerResponse>>();
 
 export default function QuestionDetailContent({question, initialAnswers}: QuestionDetailContentProps) {
+    const router = useRouter();
     const {userId, loading} = useAuth();
     const [answers, setAnswers] = useState<AnswerType[]>(initialAnswers);
     const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -66,6 +68,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
             if (cancelled || !data.is_ok || !data.answer) return;
             const mapped: AnswerType = {
                 id: data.answer.id,
+                user_id: data.answer.user_id,
                 username: data.answer.username,
                 text: data.answer.text,
                 rating: data.answer.rating ?? 0,
@@ -102,7 +105,12 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
 
     return (
         <div className="flex flex-col">
-            <Question question={question} mode={QuestionMode.QUESTION_INNER}/>
+            <Question
+                question={question}
+                mode={QuestionMode.QUESTION_INNER}
+                showOwnerMenu={userId != null && question.user_id === userId}
+                onQuestionDeleted={() => router.push("/home")}
+            />
             <div className="border-t border-b border-separator -mx-4 px-4 py-6">
                 <h2 className="text-block-header text-gray-text mb-5">Your Answer</h2>
                 {loading && <AnswerFormLoading/>}
@@ -120,6 +128,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 answers={answers}
                 onRatingUpdateAction={handleRatingUpdate}
                 onAuthRequiredAction={() => setShowAuthPopup(true)}
+                onAnswerDeleted={(id) => setAnswers((prev) => prev.filter((a) => a.id !== id))}
             />
             {showAuthPopup && <AuthPopup onCloseAction={() => setShowAuthPopup(false)}/>}
         </div>

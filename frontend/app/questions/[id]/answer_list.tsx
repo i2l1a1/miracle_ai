@@ -6,8 +6,9 @@ import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-ho
 import {AnswerListProps, AnswerType} from "@/app/questions/types";
 import voteUpIcon from "@/public/icons/vote-up.svg";
 import voteDownIcon from "@/public/icons/vote-down.svg";
+import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
 import {useAuth} from "@/context/AuthContext";
-import {voteAnswer} from "@/lib/dataService";
+import {deleteAnswer, voteAnswer} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import MultilineText from "@/components/text/multiline-text";
 
@@ -15,6 +16,7 @@ export default function AnswerList({
     answers,
     onRatingUpdateAction,
     onAuthRequiredAction,
+    onAnswerDeleted,
 }: AnswerListProps) {
     if (!answers.length) return null;
     return (
@@ -26,6 +28,7 @@ export default function AnswerList({
                     showTopBorder={index > 0}
                     onRatingUpdateAction={onRatingUpdateAction}
                     onAuthRequiredAction={onAuthRequiredAction}
+                    onAnswerDeleted={onAnswerDeleted}
                 />
             ))}
         </div>
@@ -37,15 +40,18 @@ function AnswerItem({
     showTopBorder = false,
     onRatingUpdateAction,
     onAuthRequiredAction,
+    onAnswerDeleted,
 }: {
     answer: AnswerType;
     showTopBorder?: boolean;
     onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
     onAuthRequiredAction: () => void;
+    onAnswerDeleted: (answerId: number) => void;
 }) {
     const {userId} = useAuth();
     const [loading, setLoading] = useState(false);
     const currentVote = answer.current_vote ?? null;
+    const aid = answer.id;
 
     const formattedDate = new Intl.DateTimeFormat("en-US", {
         dateStyle: "short",
@@ -58,31 +64,40 @@ function AnswerItem({
             onAuthRequiredAction();
             return;
         }
-        if (answer.id == null || loading) return;
+        if (aid == null || loading) return;
         const newVote = currentVote === voteType ? null : voteType;
-        onRatingUpdateAction(answer.id, undefined, newVote);
+        onRatingUpdateAction(aid, undefined, newVote);
         setLoading(true);
         try {
-            const data = await voteAnswer(
-                {answerId: answer.id, userId, voteType},
-                CLIENT_API_URL
-            );
+            const data = await voteAnswer({answerId: aid, userId, voteType}, CLIENT_API_URL);
             if (data.is_ok) {
-                onRatingUpdateAction(answer.id, data.rating, newVote);
+                onRatingUpdateAction(aid, data.rating, newVote);
             } else {
-                onRatingUpdateAction(answer.id, undefined, currentVote);
+                onRatingUpdateAction(aid, undefined, currentVote);
             }
         } catch (e) {
             console.error(e);
-            onRatingUpdateAction(answer.id, undefined, currentVote);
+            onRatingUpdateAction(aid, undefined, currentVote);
         } finally {
             setLoading(false);
         }
     };
 
+    const canDelete =
+        userId != null && answer.user_id === userId && aid != null && !answer.is_bot;
+
     return (
         <div className={`py-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
-            <AvatarAndUsernameHolder username={answer.username} isBot={answer.is_bot}/>
+            <div className="flex items-center justify-between gap-2 w-full">
+                <AvatarAndUsernameHolder username={answer.username} isBot={answer.is_bot}/>
+                {canDelete && (
+                    <DeleteOverflowMenu
+                        ariaLabel="Answer actions"
+                        onDelete={() => deleteAnswer(aid, CLIENT_API_URL)}
+                        onDeleted={() => onAnswerDeleted(aid)}
+                    />
+                )}
+            </div>
             <div className="mt-5">
                 <MultilineText text={answer.text} className="text-text"/>
             </div>

@@ -178,6 +178,7 @@ export async function submitAnswer(
         if (data.is_ok && data.answer) {
             const answer = {
                 id: data.answer.id,
+                user_id: data.answer.user_id ?? params.userId,
                 username: data.answer.username,
                 text: data.answer.text,
                 rating: data.answer.rating ?? 0,
@@ -213,6 +214,20 @@ export async function createQuestion(
     });
 }
 
+export async function deleteAnswer(answerId: number, apiUrl: string): Promise<void> {
+    await fetchData(`${apiUrl}/delete_answer/${answerId}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+}
+
+export async function deleteQuestion(questionId: number, apiUrl: string): Promise<void> {
+    await fetchData(`${apiUrl}/delete_question/${questionId}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+}
+
 export async function voteAnswer(
     params: VoteAnswerParams,
     apiUrl: string
@@ -234,6 +249,7 @@ export type GenerateAiAnswerResponse = {
     created: boolean;
     answer: {
         id?: number;
+        user_id?: number;
         username: string;
         text: string;
         rating: number;
