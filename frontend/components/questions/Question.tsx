@@ -4,6 +4,7 @@ import Tag from "@/components/tags/Tag";
 import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
 import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-holder";
+import MultilineText from "@/components/text/multiline-text";
 
 export default function Question({
     question,
@@ -25,10 +26,11 @@ export default function Question({
             <div className="flex flex-col gap-5">
                 <AvatarAndUsernameHolder username={question.username}/>
                 <div>
-                    <p className="text-question-header text-bright-text font-bold mb-2 whitespace-pre-line">
-                        {question.title}
-                    </p>
-                    <p className="whitespace-pre-line">{question.text}</p>
+                    <MultilineText
+                        text={question.title}
+                        className="text-question-header text-bright-text font-bold mb-2"
+                    />
+                    <MultilineText text={question.text}/>
                     <div className="flex-wrap flex gap-2 mt-4">
                         {question.tags.map(tagText => {
                             return <Tag tagText={tagText} key={tagText}/>;

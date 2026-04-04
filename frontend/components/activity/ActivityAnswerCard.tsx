@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MultilineText from "@/components/text/multiline-text";
 
 export type ActivityAnswerItem = {
     id?: number;
@@ -30,10 +31,11 @@ export default function ActivityAnswerCard({
                 className={`pt-6 mb-6 ${showTopBorder ? "border-t border-separator" : ""}`}
             >
                 <div className="flex flex-col gap-5">
-                    <p className="text-question-header text-bright-text font-bold whitespace-pre-line">
-                        {item.question_title}
-                    </p>
-                    <p className="text-text whitespace-pre-line">{item.text}</p>
+                    <MultilineText
+                        text={item.question_title}
+                        className="text-question-header text-bright-text font-bold"
+                    />
+                    <MultilineText text={item.text} className="text-text"/>
                     <div className="flex justify-between gap-2">
                         <p className="text-gray-text">{formattedDate}</p>
                         <p className="text-gray-text">Rating: {item.rating}</p>
