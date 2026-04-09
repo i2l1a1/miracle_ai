@@ -128,7 +128,7 @@ async def generate_ai_answer(
             "answer": existing.model_dump(),
         }
 
-    text = generate_answer_text(q.title, q.text)
+    text = await generate_answer_text(q.title, q.text)
 
     saved = await save_ai_answer_crud(question_id, text)
 
