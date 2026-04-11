@@ -59,13 +59,21 @@ async def get_all_questions(
 
 
 @router.get("/my-questions")
-async def get_my_questions(current_user: User = Depends(get_current_user)):
-    return await get_questions_by_user_id_crud(current_user.id)
+async def get_my_questions(
+    current_user: User = Depends(get_current_user),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+):
+    return await get_questions_by_user_id_crud(current_user.id, page, page_size)
 
 
 @router.get("/my-answers")
-async def get_my_answers(current_user: User = Depends(get_current_user)):
-    return await get_answers_by_user_id_crud(current_user.id)
+async def get_my_answers(
+    current_user: User = Depends(get_current_user),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+):
+    return await get_answers_by_user_id_crud(current_user.id, page, page_size)
 
 
 @router.post("/add_new_question")

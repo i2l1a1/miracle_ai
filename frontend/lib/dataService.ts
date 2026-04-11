@@ -6,8 +6,10 @@ import {
     VoteAnswerResponse
 } from "@/lib/types";
 import type {AnswerType} from "@/app/questions/types";
-import {HOME_QUESTIONS_PAGE_SIZE, type HomeFilterValues} from "@/app/home/applyHomeFilters";
+import type {ActivityAnswerItem} from "@/components/activity/ActivityAnswerCard";
+import type {HomeFilterValues} from "@/app/home/applyHomeFilters";
 import type {HomePageQuestionProps} from "@/app/home/types";
+import {LIST_PAGE_SIZE} from "@/lib/listPageConstants";
 
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
@@ -294,7 +296,7 @@ export async function fetchHomeQuestions(
         filter: HomeFilterValues;
     }
 ): Promise<HomeQuestionsPageResponse> {
-    const pageSize = params.pageSize ?? HOME_QUESTIONS_PAGE_SIZE;
+    const pageSize = params.pageSize ?? LIST_PAGE_SIZE;
     const qs = new URLSearchParams({
         page: String(params.page),
         page_size: String(pageSize),
@@ -305,6 +307,39 @@ export async function fetchHomeQuestions(
         qs.set("tags", params.filter.tags.join(","));
     }
     return await fetchData(`${apiUrl}/all_questions?${qs.toString()}`);
+}
+
+export async function fetchMyQuestions(
+    apiUrl: string,
+    page: number,
+    pageSize: number = LIST_PAGE_SIZE
+): Promise<HomeQuestionsPageResponse> {
+    const qs = new URLSearchParams({
+        page: String(page),
+        page_size: String(pageSize),
+    });
+    return await fetchData(`${apiUrl}/my-questions?${qs.toString()}`);
+}
+
+export type MyAnswersPageResponse = {
+    is_ok: boolean;
+    answers: ActivityAnswerItem[];
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+};
+
+export async function fetchMyAnswers(
+    apiUrl: string,
+    page: number,
+    pageSize: number = LIST_PAGE_SIZE
+): Promise<MyAnswersPageResponse> {
+    const qs = new URLSearchParams({
+        page: String(page),
+        page_size: String(pageSize),
+    });
+    return await fetchData(`${apiUrl}/my-answers?${qs.toString()}`);
 }
 
 export function startPollingQuestionAnswers(

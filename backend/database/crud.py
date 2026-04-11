@@ -81,18 +81,39 @@ async def get_questions_paginated_crud(
         }
 
 
-async def get_questions_by_user_id_crud(user_id: int):
+async def get_questions_by_user_id_crud(user_id: int, page: int, page_size: int) -> dict:
     async with SessionLocal() as db:
+        base_where = and_(
+            QuestionDBModel.user_id == user_id,
+            QuestionDBModel.is_deleted.is_(False),
+        )
+        count_result = await db.execute(
+            select(func.count()).select_from(QuestionDBModel).where(base_where)
+        )
+        total = int(count_result.scalar_one() or 0)
+        order_cols = (QuestionDBModel.date_added.desc(), QuestionDBModel.id.desc())
+        offset = (page - 1) * page_size
         result = await db.execute(
             select(QuestionDBModel)
             .options(selectinload(QuestionDBModel.tag_rows))
-            .where(
-                QuestionDBModel.user_id == user_id,
-                QuestionDBModel.is_deleted.is_(False),
-            )
+            .where(base_where)
+            .order_by(*order_cols)
+            .offset(offset)
+            .limit(page_size)
         )
         questions = result.scalars().all()
-        return [QuestionSchema.model_validate(q) for q in questions]
+        serialized = [
+            QuestionSchema.model_validate(q).model_dump(mode="json") for q in questions
+        ]
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+        return {
+            "is_ok": True,
+            "questions": serialized,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }
 
 
 def _normalize_question_tags(raw: Optional[List[str]]) -> List[str]:
@@ -312,29 +333,50 @@ async def add_answer_crud(payload: AnswerCreateSchema):
         }
 
 
-async def get_answers_by_user_id_crud(user_id: int):
+async def get_answers_by_user_id_crud(user_id: int, page: int, page_size: int) -> dict:
     async with SessionLocal() as db:
+        base_where = and_(
+            AnswerDBModel.user_id == user_id,
+            AnswerDBModel.is_bot == False,
+            AnswerDBModel.is_deleted.is_(False),
+            QuestionDBModel.is_deleted.is_(False),
+        )
+        count_stmt = (
+            select(func.count())
+            .select_from(AnswerDBModel)
+            .join(QuestionDBModel, AnswerDBModel.question_id == QuestionDBModel.id)
+            .where(base_where)
+        )
+        count_result = await db.execute(count_stmt)
+        total = int(count_result.scalar_one() or 0)
+        order_cols = (AnswerDBModel.date_added.desc(), AnswerDBModel.id.desc())
+        offset = (page - 1) * page_size
         stmt = (
             select(AnswerDBModel, QuestionDBModel.title)
             .join(QuestionDBModel, AnswerDBModel.question_id == QuestionDBModel.id)
-            .where(
-                and_(
-                    AnswerDBModel.user_id == user_id,
-                    AnswerDBModel.is_bot == False,
-                    AnswerDBModel.is_deleted.is_(False),
-                    QuestionDBModel.is_deleted.is_(False),
-                )
-            )
+            .where(base_where)
+            .order_by(*order_cols)
+            .offset(offset)
+            .limit(page_size)
         )
         rows = (await db.execute(stmt)).all()
-        return [
+        serialized = [
             AnswerWithQuestionSchema(
                 **AnswerSchema.model_validate(a).model_dump(),
                 question_id=a.question_id,
                 question_title=title,
-            )
+            ).model_dump(mode="json")
             for a, title in rows
         ]
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+        return {
+            "is_ok": True,
+            "answers": serialized,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }
 
 
 async def vote_answer_crud(payload: VoteSchema):

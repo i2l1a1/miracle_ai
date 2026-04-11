@@ -10,13 +10,15 @@ export type HomeFilterValues = {
     tags: string[];
 };
 
+import {LIST_PAGE_SIZE} from "@/lib/listPageConstants";
+
 export const defaultHomeFilter: HomeFilterValues = {
     onlyAiAnswered: false,
     sortBy: "newest",
     tags: [],
 };
 
-export const HOME_QUESTIONS_PAGE_SIZE = 10;
+export const HOME_QUESTIONS_PAGE_SIZE = LIST_PAGE_SIZE;
 
 export function parseTagsInput(raw: string): string[] {
     return raw
