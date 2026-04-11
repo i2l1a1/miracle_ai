@@ -66,6 +66,17 @@ async def add_new_question_crud(question: QuestionSchema):
             new_question.tag_rows.append(QuestionTagDBModel(tag=tag))
 
         db.add(new_question)
+        await db.flush()
+        db.add(
+            AnswerDBModel(
+                question_id=new_question.id,
+                user_id=new_question.user_id,
+                username="AI BOT",
+                text="",
+                is_bot=True,
+                status="generating",
+            )
+        )
         user_result = await db.execute(
             select(User).where(User.id == question.user_id)
         )
@@ -323,12 +334,29 @@ async def get_ai_answer_if_exists_crud(question_id: int):
                 AnswerDBModel.question_id == question_id,
                 AnswerDBModel.is_bot == True,
                 AnswerDBModel.is_deleted.is_(False),
+                AnswerDBModel.status == "posted",
             )
         )
         row = result.scalar_one_or_none()
         if not row:
             return None
         return AnswerSchema.model_validate(row)
+
+
+async def _get_bot_answer_model(db, question_id: int) -> Optional[AnswerDBModel]:
+    r = await db.execute(
+        select(AnswerDBModel).where(
+            AnswerDBModel.question_id == question_id,
+            AnswerDBModel.is_bot == True,
+            AnswerDBModel.is_deleted.is_(False),
+        )
+    )
+    return r.scalar_one_or_none()
+
+
+async def get_bot_answer_row_after_lock_crud(question_id: int) -> Optional[AnswerDBModel]:
+    async with SessionLocal() as db:
+        return await _get_bot_answer_model(db, question_id)
 
 
 async def save_ai_answer_crud(question_id: int, text: str):
@@ -342,9 +370,20 @@ async def save_ai_answer_crud(question_id: int, text: str):
         )
         existing = ex_result.scalar_one_or_none()
         if existing:
+            if existing.status == "posted":
+                return {
+                    "is_ok": True,
+                    "created": False,
+                    "answer": AnswerSchema.model_validate(existing),
+                }
+            was_generating = existing.status == "generating"
+            existing.text = text
+            existing.status = "posted"
+            await db.commit()
+            await db.refresh(existing)
             return {
                 "is_ok": True,
-                "created": False,
+                "created": was_generating,
                 "answer": AnswerSchema.model_validate(existing),
             }
 
@@ -364,6 +403,7 @@ async def save_ai_answer_crud(question_id: int, text: str):
             username="AI BOT",
             text=text,
             is_bot=True,
+            status="posted",
         )
         db.add(new_answer)
         try:
@@ -380,9 +420,20 @@ async def save_ai_answer_crud(question_id: int, text: str):
             )
             row = ex_after.scalar_one_or_none()
             if row:
+                if row.status == "posted":
+                    return {
+                        "is_ok": True,
+                        "created": False,
+                        "answer": AnswerSchema.model_validate(row),
+                    }
+                was_generating = row.status == "generating"
+                row.text = text
+                row.status = "posted"
+                await db.commit()
+                await db.refresh(row)
                 return {
                     "is_ok": True,
-                    "created": False,
+                    "created": was_generating,
                     "answer": AnswerSchema.model_validate(row),
                 }
             raise

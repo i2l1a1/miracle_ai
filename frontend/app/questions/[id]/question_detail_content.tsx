@@ -11,7 +11,7 @@ import AnswerFormLoginPrompt from "@/app/questions/[id]/answer_form_login_prompt
 import AnswerFormLoading from "@/app/questions/[id]/answer_form_loading";
 import AuthPopup from "@/components/auth/auth-popup";
 import {AnswerType, QuestionDetailContentProps} from "@/app/questions/types";
-import {fetchData, generateAiAnswer} from "@/lib/dataService";
+import {fetchData, generateAiAnswer, startPollingQuestionAnswers} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import type {GenerateAiAnswerResponse} from "@/lib/dataService";
 
@@ -38,12 +38,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
         fetchData(`${CLIENT_API_URL}/get_question/${question.id}`)
             .then((data: { is_ok: boolean; answers: AnswerType[] }) => {
                 if (!data.is_ok) return;
-                const voteById = Object.fromEntries(
-                    (data.answers ?? []).filter((a) => a.id != null).map((a) => [a.id as number, a.current_vote])
-                );
-                setAnswers((prev) =>
-                    prev.map((a) => ({ ...a, current_vote: a.id != null ? voteById[a.id] : undefined }))
-                );
+                setAnswers(data.answers ?? []);
             })
             .catch(() => {});
     }, [userId, question.id]);
@@ -51,7 +46,10 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
     useEffect(() => {
         if (loading || !userId || !question.id) return;
         if (question.user_id !== userId) return;
-        if (answersRef.current.some((a) => a.is_bot)) return;
+        const hasPostedBot = answersRef.current.some(
+            (a) => a.is_bot && (a.status === "posted" || a.status == null)
+        );
+        if (hasPostedBot) return;
 
         let cancelled = false;
         setAiLoading(true);
@@ -74,11 +72,9 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 rating: data.answer.rating ?? 0,
                 is_bot: data.answer.is_bot ?? true,
                 date_added: data.answer.date_added,
+                status: data.answer.status,
             };
-            setAnswers((prev) => {
-                if (prev.some((a) => a.is_bot)) return prev;
-                return [...prev.filter((a) => !a.is_bot), mapped];
-            });
+            setAnswers((prev) => [...prev.filter((a) => !a.is_bot), mapped]);
         })
             .catch(() => {})
             .finally(() => {
@@ -89,6 +85,16 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
             cancelled = true;
         };
     }, [loading, userId, question.id, question.user_id]);
+
+    const hasGeneratingBot = answers.some((a) => a.is_bot && a.status === "generating");
+    const showAiAnswerLoader = aiLoading || hasGeneratingBot;
+
+    useEffect(() => {
+        if (!question.id || !hasGeneratingBot) return;
+        return startPollingQuestionAnswers(question.id, CLIENT_API_URL, setAnswers);
+    }, [question.id, hasGeneratingBot]);
+
+    const answersForList = answers.filter((a) => !(a.is_bot && a.status === "generating"));
 
     const handleRatingUpdate = (answerId: number, newRating: number | undefined, newVote: number | null) => {
         setAnswers((prev) =>
@@ -119,13 +125,13 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 )}
                 {!loading && !userId && <AnswerFormLoginPrompt onLoginClickAction={() => setShowAuthPopup(true)}/>}
             </div>
-            {aiLoading && (
+            {showAiAnswerLoader && (
                 <div className="border-t border-separator -mx-4 px-4 py-6">
                     <p className="text-gray-text">Loading...</p>
                 </div>
             )}
             <AnswerList
-                answers={answers}
+                answers={answersForList}
                 onRatingUpdateAction={handleRatingUpdate}
                 onAuthRequiredAction={() => setShowAuthPopup(true)}
                 onAnswerDeleted={(id) => setAnswers((prev) => prev.filter((a) => a.id !== id))}

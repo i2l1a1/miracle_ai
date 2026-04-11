@@ -1,4 +1,4 @@
-import os
+from asyncio import Lock
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -15,12 +15,21 @@ from database.crud import (
     vote_answer_crud,
     get_ai_answer_if_exists_crud,
     save_ai_answer_crud,
+    get_bot_answer_row_after_lock_crud,
 )
-from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema
+from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema, AnswerSchema
 from security.authSecurity import get_current_user, get_current_user_optional
 from database.data_base_models import User
 
 router = APIRouter()
+
+_generate_ai_locks: dict[int, Lock] = {}
+
+
+def _generate_ai_lock(question_id: int) -> Lock:
+    if question_id not in _generate_ai_locks:
+        _generate_ai_locks[question_id] = Lock()
+    return _generate_ai_locks[question_id]
 
 
 @router.get("/all_questions")
@@ -128,12 +137,24 @@ async def generate_ai_answer(
             "answer": existing.model_dump(),
         }
 
-    text = await generate_answer_text(q.title, q.text)
+    async with _generate_ai_lock(question_id):
+        row = await get_bot_answer_row_after_lock_crud(question_id)
+        if row and row.status == "posted":
+            return {
+                "is_ok": True,
+                "created": False,
+                "answer": AnswerSchema.model_validate(row).model_dump(),
+            }
 
-    saved = await save_ai_answer_crud(question_id, text)
-
-    return {
-        "is_ok": True,
-        "created": saved["created"],
-        "answer": saved["answer"].model_dump(),
-    }
+        text = await generate_answer_text(q.title, q.text)
+        saved = await save_ai_answer_crud(question_id, text)
+        if not saved.get("is_ok"):
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                detail=saved.get("message", "Failed to save answer"),
+            )
+        return {
+            "is_ok": True,
+            "created": saved["created"],
+            "answer": saved["answer"].model_dump(),
+        }

@@ -26,6 +26,7 @@ class AnswerSchema(BaseModel):
     is_bot: bool = False
     date_added: Optional[datetime] = None
     current_vote: Optional[int] = None
+    status: str = "posted"
 
     model_config = {"from_attributes": True}
 

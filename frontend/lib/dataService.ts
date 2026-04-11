@@ -5,6 +5,7 @@ import {
     VoteAnswerParams,
     VoteAnswerResponse
 } from "@/lib/types";
+import type {AnswerType} from "@/app/questions/types";
 
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
@@ -255,6 +256,7 @@ export type GenerateAiAnswerResponse = {
         rating: number;
         is_bot: boolean;
         date_added: string;
+        status?: string;
     };
 };
 
@@ -266,4 +268,26 @@ export async function generateAiAnswer(
         method: "POST",
         credentials: "include",
     });
+}
+
+export type GetQuestionAnswersResponse = {
+    is_ok: boolean;
+    answers?: AnswerType[];
+};
+
+export function startPollingQuestionAnswers(
+    questionId: number,
+    apiUrl: string,
+    onAnswers: (answers: AnswerType[]) => void,
+    intervalMs = 2000
+): () => void {
+    const id = setInterval(() => {
+        fetchData(`${apiUrl}/get_question/${questionId}`)
+            .then((data: GetQuestionAnswersResponse) => {
+                if (!data.is_ok || !data.answers) return;
+                onAnswers(data.answers);
+            })
+            .catch(() => {});
+    }, intervalMs);
+    return () => clearInterval(id);
 }

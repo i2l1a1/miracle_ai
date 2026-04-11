@@ -78,6 +78,7 @@ class AnswerDBModel(Base):
         nullable=False,
     )
     is_deleted = Column(Boolean, default=False, nullable=False)
+    status = Column(String(32), default="posted", nullable=False)
 
     __table_args__ = (
         Index(

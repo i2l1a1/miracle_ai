@@ -15,6 +15,7 @@ export type AnswerType = {
     is_bot: boolean
     date_added: string
     current_vote?: number
+    status?: string
 }
 
 export type AnswerListProps = {
