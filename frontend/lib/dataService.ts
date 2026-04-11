@@ -6,6 +6,8 @@ import {
     VoteAnswerResponse
 } from "@/lib/types";
 import type {AnswerType} from "@/app/questions/types";
+import {HOME_QUESTIONS_PAGE_SIZE, type HomeFilterValues} from "@/app/home/applyHomeFilters";
+import type {HomePageQuestionProps} from "@/app/home/types";
 
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
@@ -274,6 +276,36 @@ export type GetQuestionAnswersResponse = {
     is_ok: boolean;
     answers?: AnswerType[];
 };
+
+export type HomeQuestionsPageResponse = {
+    is_ok: boolean;
+    questions: HomePageQuestionProps[];
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+};
+
+export async function fetchHomeQuestions(
+    apiUrl: string,
+    params: {
+        page: number;
+        pageSize?: number;
+        filter: HomeFilterValues;
+    }
+): Promise<HomeQuestionsPageResponse> {
+    const pageSize = params.pageSize ?? HOME_QUESTIONS_PAGE_SIZE;
+    const qs = new URLSearchParams({
+        page: String(params.page),
+        page_size: String(pageSize),
+        sort: params.filter.sortBy,
+        only_ai_answered: params.filter.onlyAiAnswered ? "true" : "false",
+    });
+    if (params.filter.tags.length > 0) {
+        qs.set("tags", params.filter.tags.join(","));
+    }
+    return await fetchData(`${apiUrl}/all_questions?${qs.toString()}`);
+}
 
 export function startPollingQuestionAnswers(
     questionId: number,

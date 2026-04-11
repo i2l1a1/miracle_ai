@@ -1,10 +1,9 @@
 from asyncio import Lock
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from services.generation.ai_answer_generate import generate_answer_text
 from database.crud import (
-    get_all_questions_crud,
     get_questions_by_user_id_crud,
     get_answers_by_user_id_crud,
     add_new_question_crud,
@@ -16,6 +15,7 @@ from database.crud import (
     get_ai_answer_if_exists_crud,
     save_ai_answer_crud,
     get_bot_answer_row_after_lock_crud,
+    get_questions_paginated_crud,
 )
 from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema, AnswerSchema
 from security.authSecurity import get_current_user, get_current_user_optional
@@ -32,9 +32,30 @@ def _generate_ai_lock(question_id: int) -> Lock:
     return _generate_ai_locks[question_id]
 
 
+_HOME_SORT_VALUES = frozenset({"newest", "oldest", "most_answers", "fewest_answers"})
+
+
 @router.get("/all_questions")
-async def get_all_questions():
-    return await get_all_questions_crud()
+async def get_all_questions(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+    sort: str = Query("newest"),
+    only_ai_answered: bool = Query(False),
+    tags: str = Query(""),
+):
+    if sort not in _HOME_SORT_VALUES:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="Invalid sort; use newest, oldest, most_answers, or fewest_answers",
+        )
+    tag_list = [t.strip().lower() for t in tags.split(",") if t.strip()]
+    return await get_questions_paginated_crud(
+        page=page,
+        page_size=page_size,
+        sort_by=sort,
+        only_ai_answered=only_ai_answered,
+        tags=tag_list,
+    )
 
 
 @router.get("/my-questions")

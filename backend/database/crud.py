@@ -15,20 +15,70 @@ from schemas.pydantic_schemas import (
 from typing import List, Optional
 
 from database.data_base_init import SessionLocal
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 
 
-async def get_all_questions_crud():
+async def get_questions_paginated_crud(
+        page: int,
+        page_size: int,
+        sort_by: str,
+        only_ai_answered: bool,
+        tags: List[str],
+) -> dict:
     async with SessionLocal() as db:
+        conditions = [QuestionDBModel.is_deleted.is_(False)]
+        if only_ai_answered:
+            conditions.append(QuestionDBModel.answers_count == 0)
+        for raw in tags:
+            t = (raw or "").strip().lower()
+            if not t:
+                continue
+            conditions.append(
+                QuestionDBModel.tag_rows.any(
+                    func.lower(QuestionTagDBModel.tag) == t
+                )
+            )
+
+        where_clause = and_(*conditions)
+
+        count_result = await db.execute(
+            select(func.count()).select_from(QuestionDBModel).where(where_clause)
+        )
+        total = int(count_result.scalar_one() or 0)
+
+        if sort_by == "oldest":
+            order_cols = (QuestionDBModel.date_added.asc(), QuestionDBModel.id.asc())
+        elif sort_by == "most_answers":
+            order_cols = (QuestionDBModel.answers_count.desc(), QuestionDBModel.id.desc())
+        elif sort_by == "fewest_answers":
+            order_cols = (QuestionDBModel.answers_count.asc(), QuestionDBModel.id.asc())
+        else:
+            order_cols = (QuestionDBModel.date_added.desc(), QuestionDBModel.id.desc())
+
+        offset = (page - 1) * page_size
         result = await db.execute(
             select(QuestionDBModel)
             .options(selectinload(QuestionDBModel.tag_rows))
-            .where(QuestionDBModel.is_deleted.is_(False))
+            .where(where_clause)
+            .order_by(*order_cols)
+            .offset(offset)
+            .limit(page_size)
         )
         questions = result.scalars().all()
-        return [QuestionSchema.model_validate(q) for q in questions]
+        serialized = [
+            QuestionSchema.model_validate(q).model_dump(mode="json") for q in questions
+        ]
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 0
+        return {
+            "is_ok": True,
+            "questions": serialized,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }
 
 
 async def get_questions_by_user_id_crud(user_id: int):
