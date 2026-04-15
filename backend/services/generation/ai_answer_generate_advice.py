@@ -1,5 +1,5 @@
 from langchain_core.messages import HumanMessage, SystemMessage
-from services.generation.build_chat import _build_chat
+from services.generation.build_chat import _build_chat, safe_ainvoke
 
 
 async def generate_answer_text(question_title: str, question_text: str) -> str:
@@ -27,7 +27,7 @@ async def generate_answer_text(question_title: str, question_text: str) -> str:
 ..."""
     )
     step1_messages = [step1_system, step1_user]
-    step1_result = (await chat.ainvoke(step1_messages)).content
+    step1_result = (await safe_ainvoke(chat, step1_messages)).content
     print("=== [Advice] Шаг 1 (Факты и язык) ===\n", step1_result, "\n")
 
     detected_language = "русский"
@@ -54,11 +54,12 @@ async def generate_answer_text(question_title: str, question_text: str) -> str:
 - Вместо списков пиши связным текстом, перечисляя варианты через запятые или разделяя абзацами.
 - Если фактов недостаточно, скажи: «Мне не хватает информации для точного совета. Уточните, пожалуйста, ...» (на языке {detected_language}).
 - Не добавляй вымышленную информацию.
+- ЗАПРЕЩЕНО добавлять в ответ любые фразы-паразиты: «если нужна будет дополнительная информация, обращайтесь», «всегда рад помочь», «если что-то непонятно - просто спроси», «надеюсь, это поможет», «удачи» и любые другие вежливые завершающие фразы. Ответ должен быть строго по существу, без предложений дальнейшей помощи.
 
 Ответ:"""
     )
     step2_messages = [step2_system, step2_user]
-    step2_result = (await chat.ainvoke(step2_messages)).content
+    step2_result = (await safe_ainvoke(chat, step2_messages)).content
     print("=== [Advice] Шаг 2 (Черновик) ===\n", step2_result, "\n")
 
     step3_system = SystemMessage(
@@ -76,12 +77,13 @@ async def generate_answer_text(question_title: str, question_text: str) -> str:
 2. Удали любые выдумки, выходящие за рамки фактов.
 3. Удали элементы маркдауна (** , *, `, #, -, а также цифровые или маркированные списки). Оставь только обычный текст, разделённый на параграфы (\\n\\n).
 4. Если перечисляются варианты, они должны быть в виде связного текста (например: «Первый вариант - ..., второй - ...»), а не в виде списка.
-5. Если всё хорошо, верни ответ без изменений.
+5. УДАЛИ ЛЮБЫЕ ФРАЗЫ-ПАРАЗИТЫ: «если нужна будет дополнительная информация, обращайтесь», «всегда рад помочь», «если что-то непонятно - просто спроси», «надеюсь, это поможет», «удачи», «успехов», «обращайтесь», «всего доброго» и любые другие завершающие вежливые фразы. Ответ должен заканчиваться последним полезным предложением по существу.
+6. Если всё хорошо, верни ответ без изменений.
 
 Верни только исправленный ответ. Без пояснений."""
     )
     step3_messages = [step3_system, step3_user]
-    step3_result = (await chat.ainvoke(step3_messages)).content
+    step3_result = (await safe_ainvoke(chat, step3_messages)).content
     print("=== [Advice] Шаг 3 (Финальный ответ) ===\n", step3_result, "\n")
 
     return step3_result

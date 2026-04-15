@@ -1,6 +1,9 @@
 import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain_core.messages import BaseMessage, AIMessage
+from typing import List
+import asyncio
 
 load_dotenv(dotenv_path=".env")
 
@@ -14,3 +17,20 @@ def _build_chat(max_tokens=512, temperature=0.0) -> ChatOpenAI:
         max_tokens=max_tokens,
         temperature=temperature
     )
+
+
+async def safe_ainvoke(chat: ChatOpenAI, messages: List[BaseMessage], retries: int = 3, delay: float = 1.0):
+    for attempt in range(retries):
+        try:
+            return await chat.ainvoke(messages)
+        except Exception as e:
+            error_str = str(e)
+            print("[error] [safe_ainvoke]")
+            print(error_str)
+            if "JSONDecodeError" in error_str or "Expecting value" in error_str:
+                if attempt < retries - 1:
+                    await asyncio.sleep(delay * (attempt + 1))
+                    continue
+            else:
+                raise
+    return AIMessage(content="The answer cannot be generated.")
