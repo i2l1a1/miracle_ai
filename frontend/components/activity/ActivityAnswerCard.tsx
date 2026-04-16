@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MultilineText from "@/components/text/multiline-text";
+import {truncateText} from "@/lib/textTruncation";
 
 export type ActivityAnswerItem = {
     id?: number;
@@ -32,10 +33,10 @@ export default function ActivityAnswerCard({
             >
                 <div className="flex flex-col gap-5">
                     <MultilineText
-                        text={item.question_title}
+                        text={truncateText(item.question_title, 100)}
                         className="text-question-header text-bright-text font-bold"
                     />
-                    <MultilineText text={item.text} className="text-text"/>
+                    <MultilineText text={truncateText(item.text)} className="text-text"/>
                     <div className="flex justify-between gap-2">
                         <p className="text-gray-text">{formattedDate}</p>
                         <p className="text-gray-text">Rating: {item.rating}</p>

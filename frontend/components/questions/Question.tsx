@@ -8,6 +8,7 @@ import MultilineText from "@/components/text/multiline-text";
 import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
 import {deleteQuestion} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
+import {truncateText} from "@/lib/textTruncation";
 
 export default function Question({
     question,
@@ -22,6 +23,17 @@ export default function Question({
     showOwnerMenu?: boolean;
     onQuestionDeleted?: () => void;
 }) {
+
+    const questionTitleForView =
+        mode === QuestionMode.HOME_PAGE
+            ? truncateText(question.title, 100)
+            : question.title;
+
+    const questionTextForView =
+        mode === QuestionMode.HOME_PAGE
+            ? truncateText(question.text)
+            : question.text;
+
     const formattedDateAdded = new Intl.DateTimeFormat("en-US", {
         dateStyle: "short",
         timeStyle: "short",
@@ -41,10 +53,10 @@ export default function Question({
         <div className="flex flex-col">
             <div>
                 <MultilineText
-                    text={question.title}
+                    text={questionTitleForView}
                     className="text-question-header text-bright-text font-bold mb-2"
                 />
-                <MultilineText text={question.text} />
+                <MultilineText text={questionTextForView} />
                 <div className="flex-wrap flex gap-2 mt-4">
                     {question.tags.map((tagText) => (
                         <Tag tagText={tagText} key={tagText} />
