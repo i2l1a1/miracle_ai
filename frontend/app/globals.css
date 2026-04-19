@@ -56,6 +56,10 @@ body {
     margin: 0;
 }
 
+.rich-text p + p {
+    margin-top: 0.75rem;
+}
+
 .rich-text :not(pre) > code {
     padding: 0.1rem 0.35rem;
     border: 1px solid var(--color-input-stroke);
