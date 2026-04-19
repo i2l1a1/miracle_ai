@@ -43,3 +43,76 @@ body {
     font-size: var(--text-main-text);
     font-weight: var(--font-weight-regular);
 }
+
+.rich-text {
+    line-height: 1.6;
+}
+
+.rich-text > * + * {
+    margin-top: 0.75rem;
+}
+
+.rich-text p {
+    margin: 0;
+}
+
+.rich-text :not(pre) > code {
+    padding: 0.1rem 0.35rem;
+    border: 1px solid var(--color-input-stroke);
+    border-radius: 0.35rem;
+    background: #171b21;
+    color: var(--color-bright-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9em;
+}
+
+.rich-text pre {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-input-stroke);
+    border-radius: 0.5rem;
+    background: #15161d;
+    overflow-x: auto;
+}
+
+.rich-text pre:first-child {
+    margin-top: 0;
+}
+
+.rich-text pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: var(--color-bright-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    line-height: 1.5;
+    white-space: pre;
+}
+
+.rich-text .hljs-keyword,
+.rich-text .hljs-selector-tag,
+.rich-text .hljs-literal {
+    color: #c792ea;
+}
+
+.rich-text .hljs-string,
+.rich-text .hljs-attr,
+.rich-text .hljs-title.class_ {
+    color: #c3e88d;
+}
+
+.rich-text .hljs-number,
+.rich-text .hljs-symbol,
+.rich-text .hljs-variable {
+    color: #f78c6c;
+}
+
+.rich-text .hljs-comment {
+    color: #6b737c;
+}
+
+.rich-text .hljs-title.function_,
+.rich-text .hljs-function {
+    color: #82aaff;
+}

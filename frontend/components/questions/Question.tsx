@@ -5,6 +5,7 @@ import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
 import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-holder";
 import MultilineText from "@/components/text/multiline-text";
+import RichText from "@/components/text/rich-text";
 import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
 import {deleteQuestion} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
@@ -56,7 +57,7 @@ export default function Question({
                     text={questionTitleForView}
                     className="text-question-header text-bright-text font-bold mb-2"
                 />
-                <MultilineText text={questionTextForView} />
+              <RichText text={questionTextForView} />
                 <div className="flex-wrap flex gap-2 mt-4">
                     {question.tags.map((tagText) => (
                         <Tag tagText={tagText} key={tagText} />

@@ -10,7 +10,7 @@ import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
 import {useAuth} from "@/context/AuthContext";
 import {deleteAnswer, voteAnswer} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
-import MultilineText from "@/components/text/multiline-text";
+import RichText from "@/components/text/rich-text";
 
 export default function AnswerList({
     answers,
@@ -99,7 +99,7 @@ function AnswerItem({
                 )}
             </div>
             <div className="mt-5">
-                <MultilineText text={answer.text} className="text-text"/>
+                <RichText text={answer.text} className="text-text"/>
             </div>
             <div className="flex items-center justify-between gap-2 mt-4">
                 <div className="flex items-center gap-2">
