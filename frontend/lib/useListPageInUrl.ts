@@ -22,7 +22,7 @@ export function useListPageInUrl() {
             if (next <= 1) params.delete("page");
             else params.set("page", String(next));
             const qs = params.toString();
-            router.replace(qs ? `${pathname}?${qs}` : pathname, {scroll: false});
+            router.replace(qs ? `${pathname}?${qs}` : pathname);
         },
         [router, pathname, searchParams]
     );

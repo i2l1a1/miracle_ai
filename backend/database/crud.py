@@ -137,17 +137,6 @@ async def add_new_question_crud(question: QuestionSchema):
             new_question.tag_rows.append(QuestionTagDBModel(tag=tag))
 
         db.add(new_question)
-        await db.flush()
-        db.add(
-            AnswerDBModel(
-                question_id=new_question.id,
-                user_id=new_question.user_id,
-                username="AI BOT",
-                text="",
-                is_bot=True,
-                status="generating",
-            )
-        )
         user_result = await db.execute(
             select(User).where(User.id == question.user_id)
         )
@@ -449,6 +438,44 @@ async def _get_bot_answer_model(db, question_id: int) -> Optional[AnswerDBModel]
 async def get_bot_answer_row_after_lock_crud(question_id: int) -> Optional[AnswerDBModel]:
     async with SessionLocal() as db:
         return await _get_bot_answer_model(db, question_id)
+
+
+async def create_or_get_generating_ai_answer_crud(question_id: int, owner_user_id: int):
+    async with SessionLocal() as db:
+        new_answer = AnswerDBModel(
+            question_id=question_id,
+            user_id=owner_user_id,
+            username="AI BOT",
+            text="",
+            is_bot=True,
+            status="generating",
+        )
+        db.add(new_answer)
+        try:
+            await db.commit()
+            await db.refresh(new_answer)
+            return {
+                "is_ok": True,
+                "created": True,
+                "answer": AnswerSchema.model_validate(new_answer),
+            }
+        except IntegrityError:
+            await db.rollback()
+            ex_after = await db.execute(
+                select(AnswerDBModel).where(
+                    AnswerDBModel.question_id == question_id,
+                    AnswerDBModel.is_bot == True,
+                    AnswerDBModel.is_deleted.is_(False),
+                )
+            )
+            row = ex_after.scalar_one_or_none()
+            if not row:
+                return {"is_ok": False, "message": "Failed to reserve AI generation"}
+            return {
+                "is_ok": True,
+                "created": False,
+                "answer": AnswerSchema.model_validate(row),
+            }
 
 
 async def save_ai_answer_crud(question_id: int, text: str):

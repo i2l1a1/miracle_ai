@@ -15,6 +15,7 @@ from database.crud import (
     get_ai_answer_if_exists_crud,
     save_ai_answer_crud,
     get_bot_answer_row_after_lock_crud,
+    create_or_get_generating_ai_answer_crud,
     get_questions_paginated_crud,
 )
 from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema, AnswerSchema
@@ -168,11 +169,24 @@ async def generate_ai_answer(
 
     async with _generate_ai_lock(question_id):
         row = await get_bot_answer_row_after_lock_crud(question_id)
-        if row and row.status == "posted":
+        if row and row.status in {"posted", "generating"}:
             return {
                 "is_ok": True,
                 "created": False,
                 "answer": AnswerSchema.model_validate(row).model_dump(),
+            }
+
+        reserved = await create_or_get_generating_ai_answer_crud(question_id, q.user_id)
+        if not reserved.get("is_ok"):
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                detail=reserved.get("message", "Failed to reserve AI generation"),
+            )
+        if not reserved.get("created"):
+            return {
+                "is_ok": True,
+                "created": False,
+                "answer": reserved["answer"].model_dump(),
             }
 
         text = await generate_answer_text(q.title, q.text)
