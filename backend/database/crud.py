@@ -235,6 +235,18 @@ async def get_question_crud(question_id: int, user_id: int | None = None):
         if not question:
             return {"is_ok": False, "message": f"Question with id {question_id} not found"}
 
+        def sort_answers(items: list[AnswerDBModel]) -> list[AnswerDBModel]:
+            def sort_key(a: AnswerDBModel):
+                low_rated = a.rating < -3
+                if low_rated:
+                    return 1, a.date_added
+                accepted_rank = 0 if a.is_accepted else 1
+                bot_rank = 0 if a.is_bot else 1
+                date_rank = -a.date_added.timestamp()
+                return 0, accepted_rank, bot_rank, date_rank
+
+            return sorted(items, key=sort_key)
+
         if user_id is not None:
             stmt = (
                 select(AnswerDBModel, VoteDBModel.vote_type)
@@ -251,10 +263,12 @@ async def get_question_crud(question_id: int, user_id: int | None = None):
                 )
             )
             rows = (await db.execute(stmt)).all()
+            ordered_answers = sort_answers([a for a, _ in rows])
+            vote_by_answer_id = {a.id: vote_type for a, vote_type in rows}
             answers_data = []
-            for a, vote_type in rows:
+            for a in ordered_answers:
                 d = AnswerSchema.model_validate(a).model_dump()
-                d["current_vote"] = vote_type
+                d["current_vote"] = vote_by_answer_id.get(a.id)
                 answers_data.append(d)
         else:
             a_result = await db.execute(
@@ -263,7 +277,7 @@ async def get_question_crud(question_id: int, user_id: int | None = None):
                     AnswerDBModel.is_deleted.is_(False),
                 )
             )
-            answers = a_result.scalars().all()
+            answers = sort_answers(a_result.scalars().all())
             answers_data = [
                 AnswerSchema.model_validate(a).model_dump() for a in answers
             ]
