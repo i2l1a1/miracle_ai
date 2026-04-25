@@ -27,6 +27,7 @@ class AnswerSchema(BaseModel):
     date_added: Optional[datetime] = None
     current_vote: Optional[int] = None
     status: str = "posted"
+    is_accepted: bool = False
 
     model_config = {"from_attributes": True}
 

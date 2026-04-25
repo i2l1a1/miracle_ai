@@ -408,6 +408,40 @@ async def vote_answer_crud(payload: VoteSchema):
         return {"is_ok": True, "rating": answer.rating}
 
 
+async def accept_answer_crud(answer_id: int, owner_user_id: int) -> dict:
+    async with SessionLocal() as db:
+        stmt = (
+            select(AnswerDBModel, QuestionDBModel)
+            .join(QuestionDBModel, AnswerDBModel.question_id == QuestionDBModel.id)
+            .where(
+                AnswerDBModel.id == answer_id,
+                AnswerDBModel.is_deleted.is_(False),
+                QuestionDBModel.is_deleted.is_(False),
+            )
+        )
+        row = (await db.execute(stmt)).first()
+        if not row:
+            return {"is_ok": False, "error": "not_found"}
+        answer, question = row
+        if question.user_id != owner_user_id:
+            return {"is_ok": False, "error": "forbidden"}
+        if answer.is_bot:
+            return {"is_ok": False, "error": "forbidden"}
+
+        rows = await db.execute(
+            select(AnswerDBModel).where(
+                AnswerDBModel.question_id == question.id,
+                AnswerDBModel.is_deleted.is_(False),
+            )
+        )
+        for candidate in rows.scalars().all():
+            candidate.is_accepted = candidate.id == answer.id
+
+        await db.commit()
+        await db.refresh(answer)
+        return {"is_ok": True, "answer": AnswerSchema.model_validate(answer)}
+
+
 async def get_ai_answer_if_exists_crud(question_id: int):
     async with SessionLocal() as db:
         result = await db.execute(

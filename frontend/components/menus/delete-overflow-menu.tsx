@@ -8,10 +8,16 @@ export default function DeleteOverflowMenu({
     ariaLabel,
     onDelete,
     onDeleted,
+    onSecondaryAction,
+    onSecondaryDone,
+    secondaryLabel,
 }: {
     ariaLabel: string;
-    onDelete: () => Promise<void>;
-    onDeleted: () => void;
+    onDelete?: () => Promise<void>;
+    onDeleted?: () => void;
+    onSecondaryAction?: () => Promise<void>;
+    onSecondaryDone?: () => void;
+    secondaryLabel?: string;
 }) {
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -50,24 +56,46 @@ export default function DeleteOverflowMenu({
                     role="menu"
                     className="absolute top-full right-0 mt-1 w-max py-1 px-1 rounded-xl border border-separator bg-blur-background"
                 >
-                    <button
-                        type="button"
-                        role="menuitem"
-                        disabled={busy}
-                        onClick={() => {
-                            setBusy(true);
-                            onDelete()
-                                .then(() => {
-                                    setOpen(false);
-                                    onDeleted();
-                                })
-                                .catch(() => {})
-                                .finally(() => setBusy(false));
-                        }}
-                        className="w-full text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-3 py-2 text-question-header font-bold text-text hover:text-[var(--color-danger-color)] disabled:opacity-50"
-                    >
-                        Delete
-                    </button>
+                    {secondaryLabel && onSecondaryAction && (
+                        <button
+                            type="button"
+                            role="menuitem"
+                            disabled={busy}
+                            onClick={() => {
+                                setBusy(true);
+                                onSecondaryAction()
+                                    .then(() => {
+                                        setOpen(false);
+                                        onSecondaryDone?.();
+                                    })
+                                    .catch(() => {})
+                                    .finally(() => setBusy(false));
+                            }}
+                            className="w-full text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-3 py-2 text-question-header font-bold text-text disabled:opacity-50"
+                        >
+                            {secondaryLabel}
+                        </button>
+                    )}
+                    {onDelete && (
+                        <button
+                            type="button"
+                            role="menuitem"
+                            disabled={busy}
+                            onClick={() => {
+                                setBusy(true);
+                                onDelete()
+                                    .then(() => {
+                                        setOpen(false);
+                                        onDeleted?.();
+                                    })
+                                    .catch(() => {})
+                                    .finally(() => setBusy(false));
+                            }}
+                            className="w-full text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-3 py-2 text-question-header font-bold text-text hover:text-[var(--color-danger-color)] disabled:opacity-50"
+                        >
+                            Delete
+                        </button>
+                    )}
                 </div>
             )}
         </div>

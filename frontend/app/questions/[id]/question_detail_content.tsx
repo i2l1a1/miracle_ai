@@ -73,6 +73,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 is_bot: data.answer.is_bot ?? true,
                 date_added: data.answer.date_added,
                 status: data.answer.status,
+                is_accepted: data.answer.is_accepted ?? false,
             };
             setAnswers((prev) => [...prev.filter((a) => !a.is_bot), mapped]);
         })
@@ -109,6 +110,15 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
         );
     };
 
+    const handleAnswerAccepted = (answerId: number) => {
+        setAnswers((prev) =>
+            prev.map((a) => ({
+                ...a,
+                is_accepted: a.id === answerId,
+            }))
+        );
+    };
+
     return (
         <div className="flex flex-col">
             <Question
@@ -132,9 +142,11 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
             )}
             <AnswerList
                 answers={answersForList}
+                questionOwnerId={question.user_id}
                 onRatingUpdateAction={handleRatingUpdate}
                 onAuthRequiredAction={() => setShowAuthPopup(true)}
                 onAnswerDeleted={(id) => setAnswers((prev) => prev.filter((a) => a.id !== id))}
+                onAnswerAccepted={handleAnswerAccepted}
             />
             {showAuthPopup && <AuthPopup onCloseAction={() => setShowAuthPopup(false)}/>}
         </div>

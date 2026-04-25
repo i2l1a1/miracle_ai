@@ -79,6 +79,7 @@ class AnswerDBModel(Base):
     )
     is_deleted = Column(Boolean, default=False, nullable=False)
     status = Column(String(32), default="posted", nullable=False)
+    is_accepted = Column(Boolean, default=False, nullable=False)
 
     __table_args__ = (
         Index(

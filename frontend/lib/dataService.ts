@@ -189,6 +189,7 @@ export async function submitAnswer(
                 rating: data.answer.rating ?? 0,
                 is_bot: data.answer.is_bot ?? false,
                 date_added: data.answer.date_added,
+                is_accepted: data.answer.is_accepted ?? false,
             };
             callbacks.onSuccess(answer);
             callbacks.onClearText?.();
@@ -249,6 +250,26 @@ export async function voteAnswer(
     });
 }
 
+export async function acceptAnswer(answerId: number, apiUrl: string): Promise<{
+    is_ok: boolean;
+    answer: {
+        id?: number;
+        user_id?: number;
+        username: string;
+        text: string;
+        rating: number;
+        is_bot: boolean;
+        date_added: string;
+        status?: string;
+        is_accepted?: boolean;
+    };
+}> {
+    return await fetchData(`${apiUrl}/accept_answer/${answerId}`, {
+        method: "POST",
+        credentials: "include",
+    });
+}
+
 export type GenerateAiAnswerResponse = {
     is_ok: boolean;
     created: boolean;
@@ -261,6 +282,7 @@ export type GenerateAiAnswerResponse = {
         is_bot: boolean;
         date_added: string;
         status?: string;
+        is_accepted?: boolean;
     };
 };
 

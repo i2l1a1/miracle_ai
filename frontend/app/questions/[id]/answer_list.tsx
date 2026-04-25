@@ -8,15 +8,17 @@ import voteUpIcon from "@/public/icons/vote-up.svg";
 import voteDownIcon from "@/public/icons/vote-down.svg";
 import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
 import {useAuth} from "@/context/AuthContext";
-import {deleteAnswer, voteAnswer} from "@/lib/dataService";
+import {acceptAnswer, deleteAnswer, voteAnswer} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import RichText from "@/components/text/rich-text";
 
 export default function AnswerList({
     answers,
+    questionOwnerId,
     onRatingUpdateAction,
     onAuthRequiredAction,
     onAnswerDeleted,
+    onAnswerAccepted,
 }: AnswerListProps) {
     if (!answers.length) return null;
     return (
@@ -25,10 +27,12 @@ export default function AnswerList({
                 <AnswerItem
                     key={answer.id}
                     answer={answer}
+                    questionOwnerId={questionOwnerId}
                     showTopBorder={index > 0}
                     onRatingUpdateAction={onRatingUpdateAction}
                     onAuthRequiredAction={onAuthRequiredAction}
                     onAnswerDeleted={onAnswerDeleted}
+                    onAnswerAccepted={onAnswerAccepted}
                 />
             ))}
         </div>
@@ -37,16 +41,20 @@ export default function AnswerList({
 
 function AnswerItem({
     answer,
+    questionOwnerId,
     showTopBorder = false,
     onRatingUpdateAction,
     onAuthRequiredAction,
     onAnswerDeleted,
+    onAnswerAccepted,
 }: {
     answer: AnswerType;
+    questionOwnerId: number;
     showTopBorder?: boolean;
     onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
     onAuthRequiredAction: () => void;
     onAnswerDeleted: (answerId: number) => void;
+    onAnswerAccepted: (answerId: number) => void;
 }) {
     const {userId} = useAuth();
     const [loading, setLoading] = useState(false);
@@ -85,18 +93,34 @@ function AnswerItem({
 
     const canDelete =
         userId != null && answer.user_id === userId && aid != null && !answer.is_bot;
+    const canAccept =
+        userId != null &&
+        questionOwnerId === userId &&
+        aid != null &&
+        !answer.is_bot &&
+        !answer.is_accepted;
 
     return (
         <div className={`py-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
             <div className="flex items-center justify-between gap-2 w-full">
                 <AvatarAndUsernameHolder username={answer.username} isBot={answer.is_bot}/>
-                {canDelete && (
-                    <DeleteOverflowMenu
-                        ariaLabel="Answer actions"
-                        onDelete={() => deleteAnswer(aid, CLIENT_API_URL)}
-                        onDeleted={() => onAnswerDeleted(aid)}
-                    />
-                )}
+                <div className="flex items-center gap-2">
+                    {answer.is_accepted && (
+                        <span className="text-[#3fb950] text-button-text font-bold">
+                            Accepted
+                        </span>
+                    )}
+                    {(canDelete || canAccept) && (
+                        <DeleteOverflowMenu
+                            ariaLabel="Answer actions"
+                            onDelete={canDelete ? () => deleteAnswer(aid, CLIENT_API_URL) : undefined}
+                            onDeleted={canDelete ? () => onAnswerDeleted(aid) : undefined}
+                            secondaryLabel={canAccept ? "Accept answer" : undefined}
+                            onSecondaryAction={canAccept ? () => acceptAnswer(aid, CLIENT_API_URL).then(() => undefined) : undefined}
+                            onSecondaryDone={canAccept ? () => onAnswerAccepted(aid) : undefined}
+                        />
+                    )}
+                </div>
             </div>
             <div className="mt-5">
                 <RichText text={answer.text} className="text-text"/>
