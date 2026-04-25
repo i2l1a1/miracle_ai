@@ -70,7 +70,7 @@ export default function SettingsPage() {
 
     return (
         <ProtectedRoute>
-            <div className="mt-6">
+            <div className="content-max-800 mt-6">
                 <div className="flex items-center gap-4">
                     <Image src={UserAvatar} alt="Avatar" width={60} height={60}/>
                     <div className="flex flex-col gap-1">

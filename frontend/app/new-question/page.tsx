@@ -43,7 +43,7 @@ export default function NewQuestionPage() {
 
     return (
         <ProtectedRoute>
-            <div>
+            <div className="content-max-800">
                 <h1 className="text-block-header text-gray-text mt-6 mb-5">Ask question</h1>
                 <div className="mb-4">
                     <SingleLineInputField

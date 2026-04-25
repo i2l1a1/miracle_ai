@@ -118,6 +118,7 @@ export default function MyQuestionsContent() {
             totalPages={totalPages}
             onPageChange={replacePageInUrl}
             disabled={refreshing}
+            className="flex flex-col items-center gap-4 border-t border-separator py-6"
           />
         </>
       )}
