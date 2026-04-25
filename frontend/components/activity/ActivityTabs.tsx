@@ -9,8 +9,8 @@ export default function ActivityTabs() {
     const isAnswers = pathname === "/activity/my-answers";
 
     return (
-        <div className="mt-3">
-            <nav className="flex gap-5 border-b border-separator -mx-4 px-4">
+        <div className="mt-3 content-max-800">
+            <nav className="flex gap-5 border-b border-separator">
                 <Link
                     href="/activity/my-questions"
                     className={`relative pt-2 pb-[17px] px-1 text-[16px] -mb-px ${

@@ -11,140 +11,143 @@ import {useAuth} from "@/context/AuthContext";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 
 export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }) {
-    const router = useRouter();
-    const {setAuth} = useAuth();
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [isRegister, setIsRegister] = useState(false);
+  const router = useRouter();
+  const {setAuth} = useAuth();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
 
-    const validateForm = () => {
-        if (!username || !password) {
-            setError("Username and password are required");
-            return false;
+  const validateForm = () => {
+    if (!username || !password) {
+      setError("Username and password are required");
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
+  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!validateForm()) return;
+    setError("");
+
+    try {
+      const response = await fetch(`${CLIENT_API_URL}/register`, {
+        method: "POST",
+        credentials: "include",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, password}),
+      });
+
+      if (response.ok) {
+        await handleLogin();
+      } else {
+        const errorData = await response.json();
+        if (response.status === 400 && errorData.detail === "Username already registered") {
+          setError("Username already registered");
+        } else {
+          setError(errorData.detail || "Registration failed!");
         }
-        setError("");
-        return true;
-    };
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again later.");
+    }
+  };
 
-    const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        if (!validateForm()) return;
-        setError("");
+  const handleLogin = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    if (!validateForm()) return;
+    setError("");
 
-        try {
-            const response = await fetch(`${CLIENT_API_URL}/register`, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username,
-                    password,
-                }),
-            });
+    const formDetails = new URLSearchParams();
+    formDetails.append("username", username);
+    formDetails.append("password", password);
 
-            if (response.ok) {
-                await handleLogin();
-            } else {
-                const errorData = await response.json();
-                if (response.status === 400 && errorData.detail === "Username already registered") {
-                    setError("Username already registered");
-                } else {
-                    setError(errorData.detail || "Registration failed!");
-                }
-            }
-        } catch (err) {
-            setError("An error occurred. Please try again later.");
+    try {
+      const response = await fetch(`${CLIENT_API_URL}/token`, {
+        method: "POST",
+        credentials: "include",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: formDetails,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAuth(data.username ?? username, data.user_id ?? null);
+        onCloseAction();
+        const redirect = sessionStorage.getItem("redirectAfterLogin");
+        if (redirect) {
+          sessionStorage.removeItem("redirectAfterLogin");
+          router.push(redirect);
         }
-    };
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || "Authentication failed!");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again later.");
+    }
+  };
 
-    const handleLogin = async (event?: FormEvent<HTMLFormElement>) => {
-        event?.preventDefault();
-        if (!validateForm()) return;
-        setError("");
+  const toggleMode = () => {
+    setIsRegister((prev) => !prev);
+    setError("");
+    setUsername("");
+    setPassword("");
+  };
 
-        const formDetails = new URLSearchParams();
-        formDetails.append("username", username);
-        formDetails.append("password", password);
+  useEffect(() => {
+    document.body.classList.add("overflow-hidden");
+    return () => document.body.classList.remove("overflow-hidden");
+  }, []);
 
-        try {
-            const response = await fetch(`${CLIENT_API_URL}/token`, {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: formDetails,
-            });
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-background px-4 h-full">
+      <div onClick={onCloseAction} className="self-end mt-4 cursor-pointer">
+        <Image src={closeAuth} alt="Close"/>
+      </div>
 
-            if (response.ok) {
-                const data = await response.json();
-                setAuth(data.username ?? username, data.user_id ?? null);
-                onCloseAction();
-                const redirect = sessionStorage.getItem("redirectAfterLogin");
-                if (redirect) {
-                    sessionStorage.removeItem("redirectAfterLogin");
-                    router.push(redirect);
-                }
-            } else {
-                const errorData = await response.json();
-                setError(errorData.detail || "Authentication failed!");
-            }
-        } catch (err) {
-            setError("An error occurred. Please try again later.");
-        }
-    };
-
-    const toggleMode = () => {
-        setIsRegister((prev) => !prev);
-        setError("");
-        setUsername("");
-        setPassword("");
-    };
-
-    useEffect(() => {
-        document.body.classList.add("overflow-hidden");
-        return () => {
-            document.body.classList.remove("overflow-hidden");
-        };
-    }, [onCloseAction]);
-
-    return (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background px-4">
-            <div onClick={onCloseAction} className="self-end mt-4 cursor-pointer">
-                <Image src={closeAuth} alt="Close"/>
+      <form
+        className="flex flex-col flex-1 content-max-500 mx-auto w-full"
+        onSubmit={isRegister ? handleRegister : handleLogin}
+      >
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col">
+            <p className={`${momoTrustDisplay.className} text-welcome-label text-center`}>
+              Welcome!
+            </p>
+            <div className="flex flex-col gap-4 mt-4">
+              <SingleLineInputField
+                name="username"
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <SingleLineInputField
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-
-            <div className="flex flex-col mt-6">
-                <p className={`${momoTrustDisplay.className} text-welcome-label text-center`}>Welcome!</p>
-                <form
-                    className="mt-4 w-full"
-                    onSubmit={isRegister ? handleRegister : handleLogin}
-                >
-                    <div className="flex flex-col gap-4">
-                        <SingleLineInputField name={"username"} placeholder={"Enter username"}
-                                              onChange={(e) => setUsername(e.target.value)}/>
-                        <SingleLineInputField type={"password"} name={"password"}
-                                              placeholder={"Enter password"}
-                                              onChange={(e) => setPassword(e.target.value)}/>
-                    </div>
-                    <div className="mt-5 text-right">
-                        {isRegister ? "Have an account? " : "New here? "}
-                        <button
-                            type="button"
-                            onClick={toggleMode}
-                        >
-                            <span className="underline text-accent cursor-pointer">
-                                {isRegister ? "Log in!" : "Sign up!"}
-                            </span>
-
-                        </button>
-                    </div>
-                    <AuthButtonBig text={isRegister ? "Sign up!" : "Log in!"}/>
-                </form>
+            <div className="mt-5 text-right">
+              {isRegister ? "Have an account? " : "New here? "}
+              <button type="button" onClick={toggleMode}>
+                                <span className="underline text-accent cursor-pointer">
+                                    {isRegister ? "Log in!" : "Sign up!"}
+                                </span>
+              </button>
             </div>
+            {error && <div className="text-danger-color text-sm mt-2">{error}</div>}
+          </div>
         </div>
-    );
+
+        <div className="mt-auto mb-6 flex justify-center">
+          <AuthButtonBig text={isRegister ? "Sign up!" : "Log in!"}/>
+        </div>
+      </form>
+    </div>
+  );
 }

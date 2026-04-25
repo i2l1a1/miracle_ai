@@ -39,6 +39,12 @@
         max-width: 800px;
         margin-inline: auto;
     }
+
+    .content-max-500 {
+        width: 100%;
+        max-width: 500px;
+        margin-inline: auto;
+    }
 }
 
 body {
