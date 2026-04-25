@@ -31,7 +31,7 @@ export default function ActivityAnswerCard({
             <div
                 className={`pt-6 mb-6 relative group ${showTopBorder ? "border-t border-separator" : ""}`}
             >
-                <div className="absolute -left-[4px] -right-[4px] top-[4px] -bottom-[8px] rounded-xl transition-colors duration-150 group-hover:bg-hover-overlay" />
+                <div className="absolute -left-[4px] -right-[4px] top-[4px] -bottom-[20px] rounded-xl transition-colors duration-150 group-hover:bg-hover-overlay" />
                 <div className="relative z-10 flex flex-col gap-5 px-2">
                     <MultilineText
                         text={truncateText(item.question_title, 100)}

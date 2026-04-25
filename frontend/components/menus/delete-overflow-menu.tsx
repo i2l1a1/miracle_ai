@@ -44,7 +44,7 @@ export default function DeleteOverflowMenu({
                 type="button"
                 onClick={() => setOpen((v) => !v)}
                 disabled={busy}
-                className="flex items-center justify-center w-10 h-10 -mr-1 rounded-[10px] text-gray-text hover:bg-separator hover:text-bright-text transition-all duration-150 disabled:opacity-50"
+                className="flex items-center justify-center w-10 h-10 -mr-1 rounded-[10px] text-gray-text hover:bg-separator hover:text-bright-text transition-all duration-150 disabled:opacity-50 cursor-pointer"
                 aria-label={ariaLabel}
                 aria-expanded={open}
                 aria-haspopup="menu"
