@@ -38,7 +38,7 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 cursor-pointer"
         >
-          <span className="text-gray-text">Filter</span>
+          <span className="text-gray-text hover:font-semibold">Filter</span>
           <Image
             src={SmallArrow}
             alt=""
