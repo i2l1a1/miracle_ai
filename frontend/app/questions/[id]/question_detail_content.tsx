@@ -117,7 +117,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 showOwnerMenu={userId != null && question.user_id === userId}
                 onQuestionDeleted={() => router.push("/home")}
             />
-            <div className="border-t border-b border-separator -mx-4 px-4 py-6">
+            <div className="border-t border-b border-separator py-6">
                 <h2 className="text-block-header text-gray-text mb-5">Your Answer</h2>
                 {loading && <AnswerFormLoading/>}
                 {!loading && userId && (
@@ -126,7 +126,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 {!loading && !userId && <AnswerFormLoginPrompt onLoginClickAction={() => setShowAuthPopup(true)}/>}
             </div>
             {showAiAnswerLoader && (
-                <div className="border-t border-separator -mx-4 px-4 py-6">
+                <div className="border-t border-separator py-6">
                     <p className="text-gray-text">Loading...</p>
                 </div>
             )}

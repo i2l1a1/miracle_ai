@@ -9,9 +9,11 @@ export default async function QuestionInner({params}: QuestionInnerProps) {
     const data = await fetchData(`${SERVER_API_URL}/get_question/${question_id}`);
 
     return (
-        <QuestionDetailContent
-            question={data.question}
-            initialAnswers={data.answers}
-        />
+        <div className="content-max-800">
+            <QuestionDetailContent
+                question={data.question}
+                initialAnswers={data.answers}
+            />
+        </div>
     );
 }
