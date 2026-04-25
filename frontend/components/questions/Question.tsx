@@ -51,7 +51,7 @@ export default function Question({
         ) : null;
 
     const bodyBlock = (
-        <div className="flex flex-col">
+        <div className="flex flex-col px-2">
             <div>
                 <MultilineText
                     text={questionTitleForView}
@@ -78,17 +78,18 @@ export default function Question({
     if (mode === QuestionMode.HOME_PAGE) {
         return (
             <div
-                className={`pt-6 mb-6 relative ${showTopBorder ? "border-t border-separator" : ""}`}
+                className={`pt-6 mb-6 relative group ${showTopBorder ? "border-t border-separator" : ""}`}
             >
+                <div className="absolute -left-[4px] -right-[4px] top-[4px] -bottom-[20px] rounded-xl transition-colors duration-150 group-hover:bg-hover-overlay" />
                 <Link
                     href={`/questions/${question.id}`}
                     className="absolute inset-0 z-0 rounded-sm"
                     tabIndex={-1}
                     aria-hidden
                 />
-                <div className="relative z-10 flex flex-col gap-5 pointer-events-none">
+                <div className="relative z-10 flex flex-col gap-5 px-[4px] pointer-events-none">
                     <div className="flex items-center justify-between gap-2 w-full min-w-0">
-                        <div className="min-w-0 pointer-events-none [&_*]:pointer-events-none">
+                        <div className="min-w-0 pointer-events-none [&_*]:pointer-events-none px-2">
                             <AvatarAndUsernameHolder username={question.username} />
                         </div>
                         {menu ? (

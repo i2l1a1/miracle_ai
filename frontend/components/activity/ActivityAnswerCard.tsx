@@ -27,11 +27,12 @@ export default function ActivityAnswerCard({
     }).format(new Date(item.date_added));
 
     return (
-        <Link href={`/questions/${item.question_id}`}>
+        <Link href={`/questions/${item.question_id}`} className="block">
             <div
-                className={`pt-6 mb-6 ${showTopBorder ? "border-t border-separator" : ""}`}
+                className={`pt-6 mb-6 relative group ${showTopBorder ? "border-t border-separator" : ""}`}
             >
-                <div className="flex flex-col gap-5">
+                <div className="absolute -left-[4px] -right-[4px] top-[4px] -bottom-[8px] rounded-xl transition-colors duration-150 group-hover:bg-hover-overlay" />
+                <div className="relative z-10 flex flex-col gap-5 px-2">
                     <MultilineText
                         text={truncateText(item.question_title, 100)}
                         className="text-question-header text-bright-text font-bold"
