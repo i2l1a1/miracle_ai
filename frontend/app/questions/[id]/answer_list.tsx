@@ -109,6 +109,11 @@ function AnswerItem({
                             Accepted
                         </span>
                     )}
+                    {!answer.is_accepted && answer.rating <= -3 && (
+                        <span className="text-danger-color text-button-text font-bold">
+                            Possibly incorrect
+                        </span>
+                    )}
                     {(canDelete || canSetAccepted) && (
                         <DeleteOverflowMenu
                             ariaLabel="Answer actions"
