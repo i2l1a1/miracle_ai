@@ -25,7 +25,7 @@ export type AnswerListProps = {
     onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
     onAuthRequiredAction: () => void;
     onAnswerDeleted: (answerId: number) => void;
-    onAnswerAccepted: (answerId: number) => void;
+    onAnswerAccepted: (answerId: number | null) => void;
 }
 
 export type QuestionDetailContentProps = {

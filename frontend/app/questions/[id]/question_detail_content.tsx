@@ -110,11 +110,11 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
         );
     };
 
-    const handleAnswerAccepted = (answerId: number) => {
+    const handleAnswerAccepted = (answerId: number | null) => {
         setAnswers((prev) =>
             prev.map((a) => ({
                 ...a,
-                is_accepted: a.id === answerId,
+                is_accepted: answerId != null && a.id === answerId,
             }))
         );
     };

@@ -54,7 +54,7 @@ export default function DeleteOverflowMenu({
             {open && (
                 <div
                     role="menu"
-                    className="absolute top-full right-0 mt-1 w-max py-1 px-1 rounded-xl border border-separator bg-blur-background"
+                    className="absolute top-full right-0 mt-1 py-1 px-[4px] rounded-xl border border-separator bg-blur-background"
                 >
                     {secondaryLabel && onSecondaryAction && (
                         <button
@@ -71,7 +71,7 @@ export default function DeleteOverflowMenu({
                                     .catch(() => {})
                                     .finally(() => setBusy(false));
                             }}
-                            className="w-full text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-3 py-2 text-question-header font-bold text-text disabled:opacity-50"
+                            className="block w-full whitespace-nowrap text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-2 py-2 text-question-header font-bold text-text disabled:opacity-50"
                         >
                             {secondaryLabel}
                         </button>
@@ -91,7 +91,7 @@ export default function DeleteOverflowMenu({
                                     .catch(() => {})
                                     .finally(() => setBusy(false));
                             }}
-                            className="w-full text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-3 py-2 text-question-header font-bold text-text hover:text-[var(--color-danger-color)] disabled:opacity-50"
+                            className="block w-full whitespace-nowrap text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-2 py-2 text-question-header font-bold text-text hover:text-[var(--color-danger-color)] disabled:opacity-50"
                         >
                             Delete
                         </button>

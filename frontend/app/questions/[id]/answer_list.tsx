@@ -8,7 +8,7 @@ import voteUpIcon from "@/public/icons/vote-up.svg";
 import voteDownIcon from "@/public/icons/vote-down.svg";
 import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
 import {useAuth} from "@/context/AuthContext";
-import {acceptAnswer, deleteAnswer, voteAnswer} from "@/lib/dataService";
+import {acceptAnswer, deleteAnswer, unacceptAnswer, voteAnswer} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import RichText from "@/components/text/rich-text";
 
@@ -54,7 +54,7 @@ function AnswerItem({
     onRatingUpdateAction: (answerId: number, newRating: number | undefined, newVote: number | null) => void;
     onAuthRequiredAction: () => void;
     onAnswerDeleted: (answerId: number) => void;
-    onAnswerAccepted: (answerId: number) => void;
+    onAnswerAccepted: (answerId: number | null) => void;
 }) {
     const {userId} = useAuth();
     const [loading, setLoading] = useState(false);
@@ -93,12 +93,11 @@ function AnswerItem({
 
     const canDelete =
         userId != null && answer.user_id === userId && aid != null && !answer.is_bot;
-    const canAccept =
+    const canSetAccepted =
         userId != null &&
         questionOwnerId === userId &&
         aid != null &&
-        !answer.is_bot &&
-        !answer.is_accepted;
+        true;
 
     return (
         <div className={`py-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
@@ -106,18 +105,26 @@ function AnswerItem({
                 <AvatarAndUsernameHolder username={answer.username} isBot={answer.is_bot}/>
                 <div className="flex items-center gap-2">
                     {answer.is_accepted && (
-                        <span className="text-[#3fb950] text-button-text font-bold">
+                        <span className="text-accepted-answer text-button-text font-bold">
                             Accepted
                         </span>
                     )}
-                    {(canDelete || canAccept) && (
+                    {(canDelete || canSetAccepted) && (
                         <DeleteOverflowMenu
                             ariaLabel="Answer actions"
                             onDelete={canDelete ? () => deleteAnswer(aid, CLIENT_API_URL) : undefined}
                             onDeleted={canDelete ? () => onAnswerDeleted(aid) : undefined}
-                            secondaryLabel={canAccept ? "Accept answer" : undefined}
-                            onSecondaryAction={canAccept ? () => acceptAnswer(aid, CLIENT_API_URL).then(() => undefined) : undefined}
-                            onSecondaryDone={canAccept ? () => onAnswerAccepted(aid) : undefined}
+                            secondaryLabel={canSetAccepted ? (answer.is_accepted ? "Unaccept answer" : "Accept answer") : undefined}
+                            onSecondaryAction={
+                                canSetAccepted
+                                    ? () =>
+                                        (answer.is_accepted
+                                            ? unacceptAnswer(aid, CLIENT_API_URL)
+                                            : acceptAnswer(aid, CLIENT_API_URL)
+                                        ).then(() => undefined)
+                                    : undefined
+                            }
+                            onSecondaryDone={canSetAccepted ? () => onAnswerAccepted(answer.is_accepted ? null : aid) : undefined}
                         />
                     )}
                 </div>

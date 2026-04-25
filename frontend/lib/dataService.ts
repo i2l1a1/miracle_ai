@@ -270,6 +270,26 @@ export async function acceptAnswer(answerId: number, apiUrl: string): Promise<{
     });
 }
 
+export async function unacceptAnswer(answerId: number, apiUrl: string): Promise<{
+    is_ok: boolean;
+    answer: {
+        id?: number;
+        user_id?: number;
+        username: string;
+        text: string;
+        rating: number;
+        is_bot: boolean;
+        date_added: string;
+        status?: string;
+        is_accepted?: boolean;
+    };
+}> {
+    return await fetchData(`${apiUrl}/unaccept_answer/${answerId}`, {
+        method: "POST",
+        credentials: "include",
+    });
+}
+
 export type GenerateAiAnswerResponse = {
     is_ok: boolean;
     created: boolean;

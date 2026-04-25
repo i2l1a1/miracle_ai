@@ -408,7 +408,7 @@ async def vote_answer_crud(payload: VoteSchema):
         return {"is_ok": True, "rating": answer.rating}
 
 
-async def accept_answer_crud(answer_id: int, owner_user_id: int) -> dict:
+async def set_answer_accepted_crud(answer_id: int, owner_user_id: int, accepted: bool) -> dict:
     async with SessionLocal() as db:
         stmt = (
             select(AnswerDBModel, QuestionDBModel)
@@ -425,8 +425,6 @@ async def accept_answer_crud(answer_id: int, owner_user_id: int) -> dict:
         answer, question = row
         if question.user_id != owner_user_id:
             return {"is_ok": False, "error": "forbidden"}
-        if answer.is_bot:
-            return {"is_ok": False, "error": "forbidden"}
 
         rows = await db.execute(
             select(AnswerDBModel).where(
@@ -434,8 +432,12 @@ async def accept_answer_crud(answer_id: int, owner_user_id: int) -> dict:
                 AnswerDBModel.is_deleted.is_(False),
             )
         )
-        for candidate in rows.scalars().all():
-            candidate.is_accepted = candidate.id == answer.id
+        candidates = rows.scalars().all()
+        for candidate in candidates:
+            candidate.is_accepted = False
+        await db.flush()
+        if accepted:
+            answer.is_accepted = True
 
         await db.commit()
         await db.refresh(answer)

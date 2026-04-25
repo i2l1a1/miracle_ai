@@ -12,7 +12,7 @@ from database.crud import (
     get_question_crud,
     add_answer_crud,
     vote_answer_crud,
-    accept_answer_crud,
+    set_answer_accepted_crud,
     get_ai_answer_if_exists_crud,
     save_ai_answer_crud,
     get_bot_answer_row_after_lock_crud,
@@ -153,12 +153,31 @@ async def accept_answer(
     answer_id: int,
     current_user: User = Depends(get_current_user),
 ):
-    result = await accept_answer_crud(answer_id, current_user.id)
+    result = await set_answer_accepted_crud(answer_id, current_user.id, True)
     if not result["is_ok"]:
         if result.get("error") == "forbidden":
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
                 detail="Not allowed to accept this answer",
+            )
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Answer not found")
+    return {
+        "is_ok": True,
+        "answer": result["answer"].model_dump(),
+    }
+
+
+@router.post("/unaccept_answer/{answer_id}")
+async def unaccept_answer(
+    answer_id: int,
+    current_user: User = Depends(get_current_user),
+):
+    result = await set_answer_accepted_crud(answer_id, current_user.id, False)
+    if not result["is_ok"]:
+        if result.get("error") == "forbidden":
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail="Not allowed to unaccept this answer",
             )
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Answer not found")
     return {
