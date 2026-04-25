@@ -26,9 +26,9 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
   };
 
   return (
-    <div className="flex flex-col border-b border-separator -mx-4">
+    <div className="flex flex-col border-b border-separator">
       <div
-        className={`flex items-center justify-between px-4 pt-5 ${open ? "pb-0" : "pb-5"}`}
+        className={`flex items-center justify-between pt-5 ${open ? "pb-0" : "pb-5"}`}
       >
         <p className="text-gray-text">
           {questionsCount} {pluralEn(questionsCount, "question", "questions")}
@@ -47,7 +47,7 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
         </button>
       </div>
       {open && (
-        <div className="flex flex-col gap-5 px-4 pb-5 mt-5">
+        <div className="flex flex-col gap-5 pb-5 mt-5">
           <div className="flex flex-col gap-3">
             <p className="font-bold text-bright-text">Filter by</p>
             <label className="flex items-center gap-3 cursor-pointer">
