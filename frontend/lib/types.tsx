@@ -18,6 +18,7 @@ export type AddAnswerResponse = {
         rating: number;
         is_bot: boolean;
         date_added: string;
+        is_accepted?: boolean;
     };
     message?: string;
 };
