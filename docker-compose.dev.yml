@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:18
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+
+  flyway:
+    image: flyway/flyway:11-alpine
+    command: migrate
+    env_file:
+      - ./backend/.env
+    environment:
+      FLYWAY_URL: jdbc:postgresql://db:5432/miracle_db
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+      FLYWAY_BASELINE_VERSION: "1"
+    volumes:
+      - ./backend/flyway/sql:/flyway/sql
+    depends_on:
+      db:
+        condition: service_healthy
+
+  sever:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      flyway:
+        condition: service_completed_successfully
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+      - /app/.next
+    stdin_open: true
+    tty: true
+    depends_on:
+      - sever
+
+volumes:
+  postgres_data:
+  frontend_node_modules:
