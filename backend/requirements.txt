@@ -17,3 +17,4 @@ openai>=1.0.0
 beautifulsoup4==4.14.3
 Pygments==2.20.0
 Requests==2.33.1
+langdetect==1.0.9

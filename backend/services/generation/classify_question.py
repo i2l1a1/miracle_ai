@@ -1,5 +1,6 @@
 import json
 from langchain_core.messages import HumanMessage, SystemMessage
+from langdetect import detect
 
 from services.generation.build_chat import _build_chat
 
@@ -60,3 +61,70 @@ Determine the question type and confidence in JSON format."""
     result["confidence"] = max(0.0, min(1.0, result["confidence"]))
 
     return result
+
+
+def detect_question_language(question_title: str, question_text: str) -> str:
+    full_text = f"{question_title} {question_text}"
+    try:
+        lang_code = detect(full_text)
+    except:
+        lang_code = "en"
+
+    lang_map = {
+        "en": "English",
+        "de": "German",
+        "fr": "French",
+        "es": "Spanish",
+        "it": "Italian",
+        "zh-cn": "Chinese",
+        "ja": "Japanese",
+        "ru": "Russian",
+        "af": "Afrikaans",
+        "ar": "Arabic",
+        "bg": "Bulgarian",
+        "bn": "Bengali",
+        "ca": "Catalan",
+        "cs": "Czech",
+        "cy": "Welsh",
+        "da": "Danish",
+        "el": "Greek",
+        "et": "Estonian",
+        "fa": "Persian",
+        "fi": "Finnish",
+        "gu": "Gujarati",
+        "he": "Hebrew",
+        "hi": "Hindi",
+        "hr": "Croatian",
+        "hu": "Hungarian",
+        "id": "Indonesian",
+        "kn": "Kannada",
+        "ko": "Korean",
+        "lt": "Lithuanian",
+        "lv": "Latvian",
+        "mk": "Macedonian",
+        "ml": "Malayalam",
+        "mr": "Marathi",
+        "ne": "Nepali",
+        "nl": "Dutch",
+        "no": "Norwegian",
+        "pa": "Punjabi",
+        "pl": "Polish",
+        "pt": "Portuguese",
+        "ro": "Romanian",
+        "sk": "Slovak",
+        "sl": "Slovenian",
+        "so": "Somali",
+        "sq": "Albanian",
+        "sv": "Swedish",
+        "sw": "Swahili",
+        "ta": "Tamil",
+        "te": "Telugu",
+        "th": "Thai",
+        "tl": "Tagalog",
+        "tr": "Turkish",
+        "uk": "Ukrainian",
+        "ur": "Urdu",
+        "vi": "Vietnamese",
+        "zh-tw": "Chinese (Traditional)",
+    }
+    return lang_map.get(lang_code, "English")
