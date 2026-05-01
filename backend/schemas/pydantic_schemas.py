@@ -63,3 +63,10 @@ class UserUpdateSchema(BaseModel):
 
 class TokenRefreshRequest(BaseModel):
     refresh_token: str
+
+
+class StackOverflowPublishingRequest(BaseModel):
+    fromdate: datetime
+    todate: datetime
+    generation_workers: int
+    api_url: str

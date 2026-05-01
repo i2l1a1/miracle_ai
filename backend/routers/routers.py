@@ -1,8 +1,11 @@
 from asyncio import Lock
+import asyncio
+import os
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from services.generation.ai_answer_generate import generate_answer_text
+from parsing.stackoverflow_publisher import StackOverflowPublisher
 from database.crud import (
     get_questions_by_user_id_crud,
     get_answers_by_user_id_crud,
@@ -19,7 +22,13 @@ from database.crud import (
     create_or_get_generating_ai_answer_crud,
     get_questions_paginated_crud,
 )
-from schemas.pydantic_schemas import QuestionSchema, AnswerCreateSchema, VoteSchema, AnswerSchema
+from schemas.pydantic_schemas import (
+    QuestionSchema,
+    AnswerCreateSchema,
+    VoteSchema,
+    AnswerSchema,
+    StackOverflowPublishingRequest,
+)
 from security.authSecurity import get_current_user, get_current_user_optional
 from database.data_base_models import User
 
@@ -240,3 +249,31 @@ async def generate_ai_answer(
             "created": saved["created"],
             "answer": saved["answer"].model_dump(),
         }
+
+
+@router.post("/run_stackoverflow_publishing")
+async def run_stackoverflow_publishing(
+    payload: StackOverflowPublishingRequest,
+    current_user: User = Depends(get_current_user),
+):
+    allowed_username = os.getenv("USERNAME_FOR_PARSING")
+    if not allowed_username or current_user.username != allowed_username:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail="Not allowed to run parsing",
+        )
+    if payload.fromdate >= payload.todate:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail="fromdate must be earlier than todate",
+        )
+
+    publisher = StackOverflowPublisher(payload.api_url, env_path=".env")
+    await asyncio.to_thread(
+        publisher.publish_questions_in_range,
+        payload.fromdate,
+        payload.todate,
+        True,
+        payload.generation_workers,
+    )
+    return {"is_ok": True}

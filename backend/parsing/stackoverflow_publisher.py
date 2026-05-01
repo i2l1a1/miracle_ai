@@ -40,7 +40,7 @@ class StackOverflowPublisher:
         r = session.post(
             f"{self.api_url.rstrip('/')}/token",
             data={"username": self.username, "password": self.password},
-            timeout=20,
+            timeout=30,
         )
 
         if not r.ok:
@@ -66,7 +66,7 @@ class StackOverflowPublisher:
         r = session.post(
             f"{self.api_url.rstrip('/')}/add_new_question",
             json=payload,
-            timeout=20,
+            timeout=30,
         )
 
         data = self.ensure_ok(r, "Create question")
@@ -89,7 +89,7 @@ class StackOverflowPublisher:
         session.cookies.update(cookies)
         r = session.post(
             f"{self.api_url.rstrip('/')}/generate_ai_answer/{question_id}",
-            timeout=120,
+            timeout=300,
         )
         data = self.ensure_ok(r, f"Generate AI answer for question {question_id}")
         if not data.get("is_ok"):
@@ -115,7 +115,7 @@ class StackOverflowPublisher:
             "pagesize": 100,
         }
 
-        r = requests.get(url, params=params, timeout=20)
+        r = requests.get(url, params=params, timeout=30)
         data = r.json()
 
         if not r.ok:
@@ -123,7 +123,7 @@ class StackOverflowPublisher:
 
         return data.get("items", [])
 
-    def detect_language(self, code: str) -> str:
+    def detect_code_language(self, code: str) -> str:
         try:
             lexer = guess_lexer(code)
             return lexer.aliases[0] if lexer.aliases else ""
@@ -159,7 +159,7 @@ class StackOverflowPublisher:
         code = code_tag.get_text() if code_tag else pre_tag.get_text()
         code = unescape(code)
 
-        lang = self.detect_language(code.strip())
+        lang = self.detect_code_language(code.strip())
 
         if lang:
             return f"```{lang}\n{code}```"
@@ -289,11 +289,3 @@ class StackOverflowPublisher:
                     print(f"AI generation started/completed for question: {qid}")
                 except Exception as e:
                     print(f"FAILED GENERATION: {qid} -> {e}", file=sys.stderr)
-
-
-publisher = StackOverflowPublisher("http://localhost:8080")
-
-publisher.publish_questions_in_range(
-    fromdate=datetime(2026, 4, 24, 10, 30, 0),
-    todate=datetime(2026, 4, 24, 11, 0, 0),
-)
