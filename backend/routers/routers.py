@@ -269,11 +269,23 @@ async def run_stackoverflow_publishing(
         )
 
     publisher = StackOverflowPublisher(payload.api_url, env_path=".env")
-    await asyncio.to_thread(
-        publisher.publish_questions_in_range,
-        payload.fromdate,
-        payload.todate,
-        True,
-        payload.generation_workers,
-    )
+    try:
+        await asyncio.to_thread(
+            publisher.publish_questions_in_range,
+            payload.fromdate,
+            payload.todate,
+            True,
+            payload.generation_workers,
+        )
+    except RuntimeError as exc:
+        message = str(exc)
+        if "Login failed" in message:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail="Not allowed to run parsing",
+            )
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=message,
+        )
     return {"is_ok": True}
