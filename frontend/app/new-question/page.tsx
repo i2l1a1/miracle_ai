@@ -19,7 +19,10 @@ export default function NewQuestionPage() {
     const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async () => {
-        if (!userId || !title.trim() || !body.trim()) return;
+        if (!userId || !title.trim() || !body.trim()) {
+            setError("Not all fields are filled in");
+            return;
+        }
         setError(null);
         setSubmitting(true);
         try {
@@ -48,7 +51,7 @@ export default function NewQuestionPage() {
                 <div className="mb-4">
                     <SingleLineInputField
                         name="title"
-                        placeholder="Title"
+                        placeholder="Title *"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         disabled={submitting}
@@ -57,7 +60,7 @@ export default function NewQuestionPage() {
                 <div className="mb-4">
                     <MultilineInputField
                         name="body"
-                        placeholder="Body"
+                        placeholder="Body *"
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
                         disabled={submitting}
@@ -72,7 +75,9 @@ export default function NewQuestionPage() {
                         disabled={submitting}
                     />
                 </div>
-                {error && <p className="text-danger-color mb-4">{error}</p>}
+                <p className={`mb-4 min-h-[24px] ${error ? "text-danger-color" : "text-transparent"}`}>
+                    {error ?? "placeholder"}
+                </p>
                 <div className="flex justify-end">
                     <button
                         type="button"
