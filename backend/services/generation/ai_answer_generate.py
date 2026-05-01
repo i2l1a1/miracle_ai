@@ -14,18 +14,14 @@ async def generate_answer_text(question_title: str, question_text: str) -> str:
     if confidence < 0.6:
         q_type = "advice"
 
+    print(f"Question type: {q_type}")
     if q_type == "technical":
-        print(f"q_type: technical")
         return await technical_generate(question_title, question_text)
     elif q_type == "tutorial":
-        print(f"q_type: tutorial")
         return await tutorial_generate(question_title, question_text)
     elif q_type == "current":
-        print(f"q_type: current")
         return await current_generate(question_title, question_text)
     elif q_type == "creative":
-        print(f"q_type: creative")
         return await creative_generate(question_title, question_text)
     else:
-        print(f"q_type: advice")
         return await advice_generate(question_title, question_text)

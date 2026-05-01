@@ -1,15 +1,15 @@
 _CODE_BLOCK_RULES = """
-Про код (обязательно, если показываешь примеры кода, команды терминала, конфиги, SQL, разметку и т.п.):
-- Не вставляй код «просто текстом» в абзац. Всегда оборачивай в fenced-блок Markdown.
-- Формат строго три обратные кавычки, на той же строке — идентификатор языка (нижний регистр, без пробелов): python, javascript, typescript, bash, sql, json, yaml, html, css, text и т.д.
-- Пример:
+About code (mandatory if showing code examples, terminal commands, configs, SQL, markup, etc.):
+- Do not insert code "as plain text" into a paragraph. Always wrap it in a Markdown fenced block.
+- Format: strictly three backticks, with the language identifier on the same line (lowercase, no spaces): python, javascript, typescript, bash, sql, json, yaml, html, css, text, etc.
+- Example:
 ```python
 def hello():
     return "world"
 ```
-- Перед блоком и после него — пустая строка (отдельный абзац).
-- Если язык неочевиден, используй `text`.
-- Не используй отступы «как в редакторе» вместо fenced-блока.
+- Put an empty line (separate paragraph) before and after the block.
+- If the language is not obvious, use `text`.
+- Do not use indentation "like in an editor" instead of a fenced block.
 """.strip()
 
 

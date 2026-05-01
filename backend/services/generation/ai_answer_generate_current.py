@@ -7,30 +7,30 @@ async def generate_answer_text(question_title: str, question_text: str) -> str:
     chat = _build_chat(max_tokens=4096, temperature=0.0)
 
     step1_system = SystemMessage(
-        content="Ты - нейтральный эксперт. Отвечай только на основе достоверных знаний. Все инструкции написаны на русском, но ты должен определить язык вопроса по самому вопросу пользователя, а не по языку инструкций."
+        content="You are a neutral expert. Answer only based on reliable knowledge."
     )
     step1_user = HumanMessage(
-        content=f"""Вопрос пользователя:
-Заголовок: {question_title}
-Текст: {question_text}
+        content=f"""User's question:
+Title: {question_title}
+Text: {question_text}
 
-ВНИМАНИЕ: Определи язык вопроса, прочитав сам вопрос (заголовок и текст). Не ориентируйся на язык инструкций. Язык вопроса может быть русским, английским, немецким и т.д.
-Затем перечисли ключевые факты, которые ты знаешь по этому вопросу. Если вопрос требует актуальных данных (новости, события после даты твоего обучения), честно укажи: «Мои данные не актуальны». Ты обязан писать факты на языке вопроса от пользователя.
-Не придумывай источники и не выдумывай информацию.
-В конце укажи язык, на котором нужно дать ответ.
+IMPORTANT: Determine the language of the question by reading the question itself (title and text). Do not rely on the language of the instructions.
+Then list the key facts you know about this question. If the question requires up-to-date data (news, events after your training date), honestly state: "My data is not up to date." You MUST write the facts in the user's question language.
+Do not invent sources or make up information.
+At the end, specify the language in which you should give the answer.
 
-Вывод оформи в формате:
-Язык: <язык>
-Факты:
-- факт 1
-- факт 2
+Format the output as:
+Language: <language>
+Facts:
+- fact 1
+- fact 2
 ..."""
     )
     step1_messages = [step1_system, step1_user]
     step1_result = (await safe_ainvoke(chat, step1_messages)).content
-    print("=== [Current] Шаг 1 (Факты и язык) ===\n", step1_result, "\n")
+    print("=== [Current] Step 1 (Facts and language) ===\n", step1_result, "\n")
 
-    detected_language = "русский"
+    detected_language = "english"
     for line in step1_result.split("\n"):
         if line.lower().startswith("язык:"):
             detected_language = line.split(":", 1)[1].strip()
@@ -38,64 +38,64 @@ async def generate_answer_text(question_title: str, question_text: str) -> str:
 
     step2_system = SystemMessage(
         content=(
-            "Ты - информативный помощник. Если вопрос требует актуальных данных (новости, будущее, текущие события), честно сообщи об ограничении своих знаний и предложи пользователю проверить информацию в интернете. "
-            "Тон - нейтральный, честный. Обычный текст — без Markdown (без **, *, заголовков #, списков md). "
-            "Исключение: примеры кода и команд — только в fenced-блоках ```язык ... ```, как описано в правилах пользователя."
+            "You are an informative assistant. If the question requires up-to-date data (news, future, current events), honestly state the limitation of your knowledge and suggest the user check the information online. "
+            "Tone - neutral, honest. Plain text — no Markdown (no **, *, # headings, md lists). "
+            "Exception: code and command examples — only in fenced blocks ```language ... ```, as described in the user's rules."
         )
     )
     step2_user = HumanMessage(
-        content=f"""На основе фактов напиши ответ на вопрос:
+        content=f"""Based on the facts, write an answer to the question:
 {question_title} - {question_text}
 
-Факты и язык:
+Facts and language:
 {step1_result}
 
 {_CODE_BLOCK_RULES}
 
-Правила:
-- Ты ОБЯЗАН ответить на языке: {detected_language}.
-- Если факты содержат указание на неактуальность данных, скажи примерно так: «Я не располагаю актуальной информацией, так как мои данные ограничены [дата]. Рекомендую поискать в интернете» (на языке {detected_language}).
-- Если фактов достаточно и они актуальны - дай чёткий ответ.
-- Не используй маркдаун для обычного текста (**жирный**, *курсив*, списки, заголовки, блоки кода).
-- Разбивай ответ на параграфы (\\n\\n) по необходимости.
-- Не добавляй вымышленную информацию.
-- ЗАПРЕЩЕНО добавлять в ответ любые фразы-паразиты: «если нужна будет дополнительная информация, обращайтесь», «всегда рад помочь», «если что-то непонятно - просто спроси», «надеюсь, это поможет», «удачи» и любые другие вежливые завершающие фразы. Ответ должен быть строго по существу, без предложений дальнейшей помощи.
+Rules:
+- You MUST answer in the language: {detected_language}.
+- If the facts indicate that the data is not up to date, say something like: "I do not have up-to-date information because my data is limited to [date]. I recommend searching online" (in the language {detected_language}).
+- If there are enough facts and they are up to date - give a clear answer.
+- Do not use Markdown for plain text (**bold**, *italic*, lists, headings, code blocks).
+- Break the answer into paragraphs (\\n\\n) as needed.
+- Do not add made-up information.
+- FORBIDDEN to add any filler phrases like: "if you need more information, contact me", "always glad to help", "if something is unclear - just ask", "I hope this helps", "good luck" and any other polite closing phrases. The answer must be strictly to the point, without offers of further assistance.
 
-Ответ:"""
+Answer:"""
     )
     step2_messages = [step2_system, step2_user]
     step2_result = (await safe_ainvoke(chat, step2_messages)).content
-    print("=== [Current] Шаг 2 (Черновик) ===\n", step2_result, "\n")
+    print("=== [Current] Step 2 (Draft) ===\n", step2_result, "\n")
 
     step3_system = SystemMessage(
         content=(
-            "Ты - редактор. Возвращай только исправленный текст ответа, без комментариев и пояснений. "
-            "Обычный текст — без списков md, нумерации md, заголовков #, ** и *. "
-            "Блоки кода между первой строкой ```язык и закрывающей ``` сохраняй дословно (включая переносы строк внутри кода)."
+            "You are an editor. Return only the corrected answer text, without comments or explanations. "
+            "Plain text — no md lists, md numbering, # headings, **, or *. "
+            "Code blocks between the opening ```language and closing ``` keep verbatim (including newlines inside the code)."
         )
     )
     step3_user = HumanMessage(
-        content=f"""Проверь и исправь ответ.
+        content=f"""Check and correct the answer.
 
-Исходный вопрос: {question_title} - {question_text}
-Достоверные факты: {step1_result}
-Сгенерированный ответ: {step2_result}
+Original question: {question_title} - {question_text}
+Reliable facts: {step1_result}
+Generated answer: {step2_result}
 
 {_CODE_BLOCK_RULES}
 
-Задача:
-1. Убедись, что ответ написан на языке: {detected_language}. Если нет - перепиши полностью на этом языке.
-2. Удали любые выдумки, выходящие за рамки фактов.
-3. Удали элементы маркдауна (** , *, `, #, -, списки) в обычном тексте. Не трогай содержимое внутри парных ограждений ``` ... ```.
-4. Если пример кода был без fenced-блока — оберни его в ```подходящий_язык ... ``` по правилам выше.
-5. Если вопрос требует актуальных данных, а модель попыталась их выдумать - замени на честный ответ о незнании.
-6. УДАЛИ ЛЮБЫЕ ФРАЗЫ-ПАРАЗИТЫ: «если нужна будет дополнительная информация, обращайтесь», «всегда рад помочь», «если что-то непонятно - просто спроси», «надеюсь, это поможет», «удачи», «успехов», «обращайтесь», «всего доброго» и любые другие завершающие вежливые фразы. Ответ должен заканчиваться последним полезным предложением по существу.
-7. Если всё хорошо, верни ответ без изменений.
+Task:
+1. Ensure the answer is written in the language: {detected_language}. If not - rewrite completely in that language.
+2. Remove any fabrications that go beyond the facts.
+3. Remove Markdown elements (** , *, `, #, -, lists) in plain text. Do not touch the content inside paired fences ``` ... ```.
+4. If a code example was without a fenced block — wrap it in ```appropriate_language ... ``` according to the rules above.
+5. If the question requires up-to-date data and the model tried to invent it - replace with an honest answer of not knowing.
+6. REMOVE ANY FILLER PHRASES: "if you need more information, contact me", "always glad to help", "if something is unclear - just ask", "I hope this helps", "good luck", "success", "contact us", "all the best" and any other polite closing phrases. The answer must end with the last useful sentence on point.
+7. If everything is fine, return the answer unchanged.
 
-Верни только исправленный ответ. Без пояснений."""
+Return only the corrected answer. Without explanations."""
     )
     step3_messages = [step3_system, step3_user]
     step3_result = (await safe_ainvoke(chat, step3_messages)).content
-    print("=== [Current] Шаг 3 (Финальный ответ) ===\n", step3_result, "\n")
+    print("=== [Current] Step 3 (Final answer) ===\n", step3_result, "\n")
 
     return _normalize_fenced_code_openings(step3_result)
