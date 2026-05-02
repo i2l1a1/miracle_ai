@@ -63,7 +63,7 @@ export default function MyAnswersContent() {
   }, [payload, page, replacePageInUrl]);
 
   if (!userId) {
-    return <p className="text-gray-text">No answers yet.</p>;
+    return <p className="text-gray-text">Пусто.</p>;
   }
 
   const answers = payload?.answers ?? [];
@@ -71,14 +71,14 @@ export default function MyAnswersContent() {
 
   return (
     <>
-      {initialLoading && <p className="text-gray-text py-8">Loading…</p>}
+      {initialLoading && <p className="text-gray-text py-8">Загрузка...</p>}
       {!initialLoading && loadError && !payload && (
         <p className="text-gray-text py-8">{loadError}</p>
       )}
       {payload && !loadError && (
         <>
           {answers.length === 0 ? (
-            <p className="text-gray-text py-8">No answers yet.</p>
+            <p className="text-gray-text py-8">Пусто.</p>
           ) : (
             <div
               className={

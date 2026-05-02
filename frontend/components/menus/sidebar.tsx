@@ -38,17 +38,17 @@ export default function Sidebar({onCloseAction, onOpenAuthAction}: SidebarProps)
                     <SidebarButtonAndLogo onSidebarButtonClick={onCloseAction}/>
                 </div>
                 <div className="flex flex-col gap-2 pl-1 pr-4">
-                    <MenuItem icon={HomeIcon} text="Home" href="/home" onClick={onCloseAction}/>
+                    <MenuItem icon={HomeIcon} text="Главная" href="/home" onClick={onCloseAction}/>
                     <MenuItem
                         icon={NewQuestionIcon}
-                        text="New question"
+                        text="Задать вопрос"
                         href={userId ? "/new-question" : undefined}
                         onClick={handleNewQuestion}
                     />
                     {userId && (
-                        <MenuItem icon={ActivityIcon} text="Activity" href="/activity/my-questions" onClick={onCloseAction}/>
+                        <MenuItem icon={ActivityIcon} text="Моя активность" href="/activity/my-questions" onClick={onCloseAction}/>
                     )}
-                    <MenuItem icon={HowItWorksIcon} text="How it works?" href="/how-it-works" onClick={onCloseAction}/>
+                    <MenuItem icon={HowItWorksIcon} text="Как это работает?" href="/how-it-works" onClick={onCloseAction}/>
                 </div>
             </div>
         </div>

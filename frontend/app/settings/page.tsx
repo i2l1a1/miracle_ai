@@ -9,7 +9,7 @@ import SingleLineInputField from "@/components/input/single-line-input-field";
 import UserAvatar from "@/public/icons/user-green.svg";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import {deleteAccount, getMe, updateMe, logoutUser} from "@/lib/dataService";
-import {pluralEn} from "@/lib/pluralize";
+import {pluralRu} from "@/lib/pluralize";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -65,8 +65,8 @@ export default function SettingsPage() {
 
     const statsText =
         questionsCount === 0 && answersCount === 0
-            ? "No activity yet"
-            : `${questionsCount} ${pluralEn(questionsCount, "question", "questions")} · ${answersCount} ${pluralEn(answersCount, "answer", "answers")}`;
+            ? "Пока нет активности."
+            : `${questionsCount} ${pluralRu(questionsCount, "вопрос", "вопроса", "вопросов")} · ${answersCount} ${pluralRu(answersCount, "ответ", "ответа", "ответов")}`;
 
     return (
         <ProtectedRoute>
@@ -82,29 +82,17 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-6">
-                    <p className="text-block-header text-gray-text">Profile &amp; Language</p>
+                    <p className="text-block-header text-gray-text">Профиль</p>
                     <div className="mt-5">
-                        <p className="text-text">Username</p>
+                        <p className="text-text">Имя пользователя</p>
                         <div className="mt-3">
                             <SingleLineInputField
                                 name="username"
-                                placeholder="Username"
+                                placeholder="Имя пользователя"
                                 value={usernameInput}
                                 onChange={(e) => setUsernameInput(e.target.value)}
                                 disabled={saving}
                             />
-                        </div>
-                        <div className="mt-4">
-                            <p className="text-text">Language</p>
-                            <select
-                                className="mt-3 w-full p-4 rounded-[12px] border border-input-stroke bg-transparent focus:outline-none focus:ring-0 focus:shadow-none text-text"
-                                value={language}
-                                onChange={(e) => setLanguage(e.target.value === "ru" ? "ru" : "en")}
-                                disabled={saving}
-                            >
-                                <option value="en">English</option>
-                                <option value="ru">Русский</option>
-                            </select>
                         </div>
                         <div className="mt-5 flex justify-end">
                             <button
@@ -113,14 +101,14 @@ export default function SettingsPage() {
                                 disabled={saving}
                                 className="bg-accent cursor-pointer px-5 py-3 rounded-xl text-bright-text text-button-text disabled:opacity-50"
                             >
-                                {saving ? "Saving..." : "Save"}
+                                {saving ? "Сохранение..." : "Сохранить"}
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <div className="mt-6">
-                    <p className="text-block-header text-gray-text">Account Management</p>
+                    <p className="text-block-header text-gray-text">Аккаунт</p>
                     <div className="mt-5">
                         <button
                             type="button"
@@ -139,7 +127,7 @@ export default function SettingsPage() {
                                 }
                             }}
                         >
-                            Delete my account
+                            Удалить мой аккаунт
                         </button>
                     </div>
                 </div>

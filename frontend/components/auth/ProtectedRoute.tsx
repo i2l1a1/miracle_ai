@@ -16,7 +16,7 @@ export function ProtectedRoute({children}: { children: React.ReactNode }) {
 
     if (loading) {
         return (
-            <p>Loading...</p>
+            <p>Загрузка...</p>
         );
     }
 

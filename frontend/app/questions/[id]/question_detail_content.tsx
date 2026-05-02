@@ -128,7 +128,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 onQuestionDeleted={() => router.push("/home")}
             />
             <div className="border-t border-b border-separator py-6">
-                <h2 className="text-block-header text-gray-text mb-5">Your Answer</h2>
+                <h2 className="text-block-header text-gray-text mb-5">Ваш ответ</h2>
                 {loading && <AnswerFormLoading/>}
                 {!loading && userId && (
                     <AnswerForm questionId={question.id} onSuccessAction={(answer) => setAnswers((prev) => [...prev, answer])}/>
@@ -137,7 +137,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
             </div>
             {showAiAnswerLoader && (
                 <div className="border-t border-separator py-6">
-                    <p className="text-gray-text">Loading...</p>
+                    <p className="text-gray-text">Загрузка...</p>
                 </div>
             )}
             <AnswerList

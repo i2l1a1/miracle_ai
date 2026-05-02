@@ -74,7 +74,7 @@ export default function MyQuestionsContent() {
   };
 
   if (!userId) {
-    return <p className="text-gray-text">No questions yet.</p>;
+    return <p className="text-gray-text">Пусто.</p>;
   }
 
   const questions: HomePageQuestionProps[] = payload?.questions ?? [];
@@ -82,14 +82,14 @@ export default function MyQuestionsContent() {
 
   return (
     <>
-      {initialLoading && <p className="text-gray-text py-8">Loading…</p>}
+      {initialLoading && <p className="text-gray-text py-8">Загрузка...</p>}
       {!initialLoading && loadError && !payload && (
         <p className="text-gray-text py-8">{loadError}</p>
       )}
       {payload && !loadError && (
         <>
           {questions.length === 0 ? (
-            <p className="text-gray-text py-8">No questions yet.</p>
+            <p className="text-gray-text py-8">Пусто.</p>
           ) : (
             <div
               className={

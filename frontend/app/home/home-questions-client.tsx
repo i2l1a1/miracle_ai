@@ -94,7 +94,7 @@ export default function HomeQuestionsClient() {
   return (
     <>
       <Filter questionsCount={total} onApply={handleApply}/>
-      {initialLoading && <p className="text-gray-text py-8">Loading…</p>}
+      {initialLoading && <p className="text-gray-text py-8">Загрузка...</p>}
       {!initialLoading && loadError && !payload && (
         <p className="text-gray-text py-8">{loadError}</p>
       )}

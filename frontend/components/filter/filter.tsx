@@ -6,13 +6,13 @@ import SmallArrow from "@/public/icons/small-arrow.svg";
 import SingleLineInputField from "@/components/input/single-line-input-field";
 import {HomeSortOption} from "@/app/home/applyHomeFilters";
 import {FilterProps} from "@/components/filter/types";
-import {pluralEn} from "@/lib/pluralize";
+import {pluralRu} from "@/lib/pluralize";
 
 const SORT_OPTIONS: {value: HomeSortOption; label: string}[] = [
-  {value: "newest", label: "Newest"},
-  {value: "oldest", label: "Oldest"},
-  {value: "most_answers", label: "Most answers"},
-  {value: "fewest_answers", label: "Fewest answers"},
+  {value: "newest", label: "Сначала самые новые"},
+  {value: "oldest", label: "Сначала самые старые"},
+  {value: "most_answers", label: "По убыванию количества ответов"},
+  {value: "fewest_answers", label: "По возрастанию количества ответов"},
 ];
 
 export default function Filter({questionsCount, onApply}: FilterProps) {
@@ -31,14 +31,14 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
         className={`flex items-center justify-between pt-5 ${open ? "pb-0" : "pb-5"}`}
       >
         <p className="text-gray-text">
-          {questionsCount} {pluralEn(questionsCount, "question", "questions")}
+          {questionsCount} {pluralRu(questionsCount, "вопрос", "вопроса", "вопросов")}
         </p>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 cursor-pointer"
         >
-          <span className="text-gray-text hover:font-semibold">Filter</span>
+          <span className="text-gray-text hover:font-semibold">Фильтр</span>
           <Image
             src={SmallArrow}
             alt=""
@@ -49,7 +49,7 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
       {open && (
         <div className="flex flex-col gap-5 pb-5 mt-5">
           <div className="flex flex-col gap-3">
-            <p className="font-bold text-bright-text">Filter by</p>
+            <p className="font-bold text-bright-text">Фильтр</p>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -57,11 +57,11 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
                 onChange={(e) => setOnlyAiAnswered(e.target.checked)}
                 className="size-4 rounded border-input-stroke accent-accent cursor-pointer"
               />
-              <span>Only AI-answered</span>
+              <span>Только с ответами от ИИ</span>
             </label>
           </div>
           <div className="flex flex-col gap-3">
-            <p className="font-bold text-bright-text">Sort by</p>
+            <p className="font-bold text-bright-text">Сортировка</p>
             <div className="flex flex-col gap-2">
               {SORT_OPTIONS.map(({value, label}) => (
                 <label
@@ -81,10 +81,10 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            <p className="font-bold text-bright-text">Tagged with</p>
+            <p className="font-bold text-bright-text">Теги</p>
             <SingleLineInputField
               name="filter-tags"
-              placeholder="Tags (comma separated)"
+              placeholder="Теги (через запятую)"
               value={tagsRaw}
               onChange={(e) => setTagsRaw(e.target.value)}
             />
@@ -95,7 +95,7 @@ export default function Filter({questionsCount, onApply}: FilterProps) {
               onClick={handleApplyClick}
               className="bg-accent cursor-pointer px-5 py-3 rounded-xl text-bright-text text-button-text"
             >
-              Apply filter
+              Применить
             </button>
           </div>
         </div>

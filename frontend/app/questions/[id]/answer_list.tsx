@@ -106,7 +106,7 @@ function AnswerItem({
                 <div className="flex items-center gap-2">
                     {answer.is_accepted && (
                         <span className="text-accepted-answer text-button-text font-bold">
-                            Accepted
+                            Правильный ответ
                         </span>
                     )}
                     {!answer.is_accepted && answer.rating <= -3 && (
@@ -119,7 +119,7 @@ function AnswerItem({
                             ariaLabel="Answer actions"
                             onDelete={canDelete ? () => deleteAnswer(aid, CLIENT_API_URL) : undefined}
                             onDeleted={canDelete ? () => onAnswerDeleted(aid) : undefined}
-                            secondaryLabel={canSetAccepted ? (answer.is_accepted ? "Unaccept answer" : "Accept answer") : undefined}
+                            secondaryLabel={canSetAccepted ? (answer.is_accepted ? "Снять отметку" : "Принять ответ") : undefined}
                             onSecondaryAction={
                                 canSetAccepted
                                     ? () =>

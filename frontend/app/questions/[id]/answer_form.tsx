@@ -50,7 +50,7 @@ export default function AnswerForm({questionId, onSuccessAction}: AnswerFormProp
             <div className="mb-4">
                 <MultilineInputField
                     name="answer"
-                    placeholder="Share what you think..."
+                    placeholder="Напишите, что думаете..."
                     value={answerText}
                     onChange={(e) => setAnswerText(e.target.value)}
                     disabled={submitting}
@@ -64,7 +64,7 @@ export default function AnswerForm({questionId, onSuccessAction}: AnswerFormProp
                     disabled={submitting}
                     className="bg-accent cursor-pointer px-5 py-3 rounded-xl text-bright-text text-button-text disabled:opacity-50"
                 >
-                    {submitting ? "Publishing..." : "Publish"}
+                  {submitting ? "Идёт публикация..." : "Опубликовать"}
                 </button>
             </div>
         </>

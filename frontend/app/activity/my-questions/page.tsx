@@ -6,7 +6,7 @@ export default function MyQuestionsPage() {
     return (
         <ProtectedRoute>
             <div className="content-max-800">
-                <Suspense fallback={<p className="text-gray-text py-8">Loading…</p>}>
+                <Suspense fallback={<p className="text-gray-text py-8">Загрузка...</p>}>
                     <MyQuestionsContent/>
                 </Suspense>
             </div>

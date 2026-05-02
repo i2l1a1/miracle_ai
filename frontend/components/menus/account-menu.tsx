@@ -53,8 +53,8 @@ export default function AccountMenu({onClose, triggerRef}: {
             className="absolute top-16 right-0 z-20 w-max py-1 pr-1 pl-1 border-separator rounded-bl-xl border-b border-l bg-blur-background"
             ref={menuRef}>
             <div className="flex gap-1 flex-col">
-                <MenuItem icon={SettingsIcon} text="Settings" href="/settings" onClick={onClose}/>
-                <MenuItem icon={LogOutIcon} text="Log out" onClick={handleLogout}/>
+                <MenuItem icon={SettingsIcon} text="Настройки" href="/settings" onClick={onClose}/>
+                <MenuItem icon={LogOutIcon} text="Выйти" onClick={handleLogout}/>
             </div>
         </div>
 

@@ -26,7 +26,7 @@ export default function Pagination({
     return (
         <div className={className}>
             <p className="text-gray-text text-button-text">
-                Page {page} of {totalPages}
+                Страница {page} из {totalPages}
             </p>
             <div className="flex items-center gap-3">
                 <button
@@ -37,7 +37,7 @@ export default function Pagination({
                         canPrev ? "hover:border-dark-gray-text/50" : ""
                     }`}
                 >
-                    Previous
+                    Назад
                 </button>
                 <button
                     type="button"
@@ -47,7 +47,7 @@ export default function Pagination({
                         canNext ? "hover:border-dark-gray-text/50" : ""
                     }`}
                 >
-                    Next
+                    Вперёд
                 </button>
             </div>
         </div>

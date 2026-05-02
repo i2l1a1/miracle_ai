@@ -20,7 +20,7 @@ export default function NewQuestionPage() {
 
     const handleSubmit = async () => {
         if (!userId || !title.trim() || !body.trim()) {
-            setError("Not all fields are filled in");
+            setError("Не все обязательные поля заполнены.");
             return;
         }
         setError(null);
@@ -38,7 +38,7 @@ export default function NewQuestionPage() {
             );
             if (data.is_ok && data.id) router.push(`/questions/${data.id}`);
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Failed to create question");
+            setError(e instanceof Error ? e.message : "Ошибка, попробуйте позже.");
         } finally {
             setSubmitting(false);
         }
@@ -47,11 +47,11 @@ export default function NewQuestionPage() {
     return (
         <ProtectedRoute>
             <div className="content-max-800">
-                <h1 className="text-block-header text-gray-text mt-6 mb-5">Ask question</h1>
+                <h1 className="text-block-header text-gray-text mt-6 mb-5">Задать вопрос</h1>
                 <div className="mb-4">
                     <SingleLineInputField
                         name="title"
-                        placeholder="Title *"
+                        placeholder="Заголовок *"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         disabled={submitting}
@@ -60,7 +60,7 @@ export default function NewQuestionPage() {
                 <div className="mb-4">
                     <MultilineInputField
                         name="body"
-                        placeholder="Body *"
+                        placeholder="Текст вопроса *"
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
                         disabled={submitting}
@@ -69,7 +69,7 @@ export default function NewQuestionPage() {
                 <div className="mb-5">
                     <SingleLineInputField
                         name="tags"
-                        placeholder="Tags (comma separated)"
+                        placeholder="Теги (через запятую)"
                         value={tagsStr}
                         onChange={(e) => setTagsStr(e.target.value)}
                         disabled={submitting}
@@ -85,7 +85,7 @@ export default function NewQuestionPage() {
                         disabled={submitting}
                         className="bg-accent cursor-pointer px-5 py-3 rounded-xl text-bright-text text-button-text disabled:opacity-50"
                     >
-                        {submitting ? "Publishing..." : "Publish"}
+                      {submitting ? "Идёт публикация..." : "Опубликовать"}
                     </button>
                 </div>
             </div>

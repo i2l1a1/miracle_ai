@@ -20,7 +20,7 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
 
   const validateForm = () => {
     if (!username || !password) {
-      setError("Username and password are required");
+      setError("Заполните имя пользователя и пароль");
       return false;
     }
     setError("");
@@ -45,13 +45,13 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
       } else {
         const errorData = await response.json();
         if (response.status === 400 && errorData.detail === "Username already registered") {
-          setError("Username already registered");
+          setError("Имя пользователя уже занято");
         } else {
-          setError(errorData.detail || "Registration failed!");
+          setError(errorData.detail || "Не удалось зарегистрироваться");
         }
       }
     } catch (err) {
-      setError("An error occurred. Please try again later.");
+      setError("Произошла ошибка. Пожалуйста, попробуйте позже.");
     }
   };
 
@@ -83,10 +83,10 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
         }
       } else {
         const errorData = await response.json();
-        setError(errorData.detail || "Authentication failed!");
+        setError(errorData.detail || "Произошла ошибка. Пожалуйста, попробуйте позже.");
       }
     } catch (err) {
-      setError("An error occurred. Please try again later.");
+      setError("Произошла ошибка. Пожалуйста, попробуйте позже.");
     }
   };
 
@@ -114,29 +114,29 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
       >
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col">
-            <p className={`${momoTrustDisplay.className} text-welcome-label text-center`}>
-              Welcome!
+            <p className={`text-welcome-label text-center mb-4`}>
+              Приветствуем!
             </p>
             <div className="flex flex-col gap-4 mt-4">
               <SingleLineInputField
                 name="username"
-                placeholder="Enter username"
+                placeholder="Имя пользователя"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
               <SingleLineInputField
                 type="password"
                 name="password"
-                placeholder="Enter password"
+                placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             <div className="mt-5 text-right">
-              {isRegister ? "Have an account? " : "New here? "}
+              {isRegister ? "Уже есть аккаунт? " : "Ещё нет аккаунта? "}
               <button type="button" onClick={toggleMode}>
                                 <span className="underline text-accent cursor-pointer">
-                                    {isRegister ? "Log in!" : "Sign up!"}
+                                    {isRegister ? "Войти" : "Зарегистрироваться"}
                                 </span>
               </button>
             </div>
@@ -145,7 +145,7 @@ export default function AuthPopup({onCloseAction}: { onCloseAction: () => void }
         </div>
 
         <div className="mt-auto mb-6 flex justify-center">
-          <AuthButtonBig text={isRegister ? "Sign up!" : "Log in!"}/>
+          <AuthButtonBig text={isRegister ? "Зарегистрироваться" : "Войти"}/>
         </div>
       </form>
     </div>

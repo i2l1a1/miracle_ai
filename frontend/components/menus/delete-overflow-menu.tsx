@@ -93,7 +93,7 @@ export default function DeleteOverflowMenu({
                             }}
                             className="block w-full whitespace-nowrap text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-2 py-2 text-question-header font-bold text-text hover:text-[var(--color-danger-color)] disabled:opacity-50"
                         >
-                            Delete
+                            Удалить
                         </button>
                     )}
                 </div>

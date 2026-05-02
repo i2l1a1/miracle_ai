@@ -19,7 +19,7 @@ export default function ActivityTabs() {
                             : "font-normal text-dark-gray-text"
                     }`}
                 >
-                    Questions
+                    Вопросы
                 </Link>
                 <Link
                     href="/activity/my-answers"
@@ -29,7 +29,7 @@ export default function ActivityTabs() {
                             : "font-normal text-dark-gray-text"
                     }`}
                 >
-                    Answers
+                    Ответы
                 </Link>
             </nav>
         </div>
