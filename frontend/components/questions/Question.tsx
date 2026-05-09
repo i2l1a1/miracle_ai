@@ -26,6 +26,11 @@ export default function Question({
     onQuestionDeleted?: () => void;
     answersSummaryText?: string;
 }) {
+    const copyQuestionLink = async () => {
+        if (typeof window === "undefined") return;
+        const link = `${window.location.origin}/questions/${question.id}`;
+        await navigator.clipboard.writeText(link);
+    };
 
     const questionTitleForView =
         mode === QuestionMode.HOME_PAGE
@@ -43,14 +48,14 @@ export default function Question({
         timeZone: "UTC",
     }).format(new Date(question.date_added));
 
-    const menu =
-        showOwnerMenu && onQuestionDeleted ? (
-            <DeleteOverflowMenu
-                ariaLabel="Question actions"
-                onDelete={() => deleteQuestion(question.id, CLIENT_API_URL)}
-                onDeleted={onQuestionDeleted}
-            />
-        ) : null;
+    const menu = (
+        <DeleteOverflowMenu
+            ariaLabel="Question actions"
+            onCopyLink={copyQuestionLink}
+            onDelete={showOwnerMenu && onQuestionDeleted ? () => deleteQuestion(question.id, CLIENT_API_URL) : undefined}
+            onDeleted={showOwnerMenu && onQuestionDeleted ? onQuestionDeleted : undefined}
+        />
+    );
 
     const resolvedAnswersSummaryText =
         answersSummaryText ??
@@ -98,9 +103,7 @@ export default function Question({
                         <div className="min-w-0 pointer-events-none [&_*]:pointer-events-none px-2">
                             <AvatarAndUsernameHolder username={question.username} />
                         </div>
-                        {menu ? (
-                            <div className="shrink-0 pointer-events-auto">{menu}</div>
-                        ) : null}
+                        <div className="shrink-0 pointer-events-auto">{menu}</div>
                     </div>
                     <div className="pointer-events-none [&_*]:pointer-events-none">{bodyBlock}</div>
                 </div>

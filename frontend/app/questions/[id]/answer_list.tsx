@@ -99,8 +99,17 @@ function AnswerItem({
         aid != null &&
         true;
 
+    const copyAnswerLink = async (answerId: number) => {
+        if (typeof window === "undefined") return;
+        const link = `${window.location.origin}${window.location.pathname}#answer-${answerId}`;
+        await navigator.clipboard.writeText(link);
+    };
+
     return (
-        <div className={`py-6 ${showTopBorder ? "border-t border-separator" : ""}`}>
+        <div
+            id={aid != null ? `answer-${aid}` : undefined}
+            className={`py-6 ${showTopBorder ? "border-t border-separator" : ""}`}
+        >
             <div className="flex items-center justify-between gap-2 w-full">
                 <AvatarAndUsernameHolder username={answer.username} isBot={answer.is_bot}/>
                 <div className="flex items-center gap-2">
@@ -114,9 +123,10 @@ function AnswerItem({
                             Possibly incorrect
                         </span>
                     )}
-                    {(canDelete || canSetAccepted) && (
+                    {aid != null && (
                         <DeleteOverflowMenu
                             ariaLabel="Answer actions"
+                            onCopyLink={() => copyAnswerLink(aid)}
                             onDelete={canDelete ? () => deleteAnswer(aid, CLIENT_API_URL) : undefined}
                             onDeleted={canDelete ? () => onAnswerDeleted(aid) : undefined}
                             secondaryLabel={canSetAccepted ? (answer.is_accepted ? "Снять отметку" : "Принять ответ") : undefined}

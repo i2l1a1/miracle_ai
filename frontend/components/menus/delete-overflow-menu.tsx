@@ -11,6 +11,8 @@ export default function DeleteOverflowMenu({
     onSecondaryAction,
     onSecondaryDone,
     secondaryLabel,
+    onCopyLink,
+    copyLabel = "Скопировать ссылку",
 }: {
     ariaLabel: string;
     onDelete?: () => Promise<void>;
@@ -18,6 +20,8 @@ export default function DeleteOverflowMenu({
     onSecondaryAction?: () => Promise<void>;
     onSecondaryDone?: () => void;
     secondaryLabel?: string;
+    onCopyLink?: () => Promise<void>;
+    copyLabel?: string;
 }) {
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -56,6 +60,25 @@ export default function DeleteOverflowMenu({
                     role="menu"
                     className="absolute top-full right-0 mt-1 py-1 px-[4px] rounded-xl border border-separator bg-blur-background"
                 >
+                    {onCopyLink && (
+                        <button
+                            type="button"
+                            role="menuitem"
+                            disabled={busy}
+                            onClick={() => {
+                                setBusy(true);
+                                onCopyLink()
+                                    .then(() => {
+                                        setOpen(false);
+                                    })
+                                    .catch(() => {})
+                                    .finally(() => setBusy(false));
+                            }}
+                            className="block w-full whitespace-nowrap text-left cursor-pointer transition-all duration-150 hover:bg-separator rounded-[10px] px-2 py-2 text-question-header font-bold text-text disabled:opacity-50"
+                        >
+                            {copyLabel}
+                        </button>
+                    )}
                     {secondaryLabel && onSecondaryAction && (
                         <button
                             type="button"
