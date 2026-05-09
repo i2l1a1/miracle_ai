@@ -124,11 +124,43 @@ class StackOverflowPublisher:
         return data.get("items", [])
 
     def detect_code_language(self, code: str) -> str:
+        tags = getattr(self, '_current_tags', None)
+        if tags:
+            lang = self._lang_from_tags(tags)
+            if lang:
+                return lang
+
         try:
             lexer = guess_lexer(code)
             return lexer.aliases[0] if lexer.aliases else ""
         except ClassNotFound:
             return ""
+
+    def _lang_from_tags(self, tags: list[str]) -> str:
+        tag_lang_map = {
+            "python": "python", "python3": "python", "py": "python",
+            "javascript": "javascript", "js": "javascript",
+            "java": "java", "c": "c", "cpp": "cpp", "c++": "cpp",
+            "csharp": "csharp", "c#": "csharp", "dotnet": "csharp",
+            "ruby": "ruby", "go": "go", "golang": "go", "rust": "rust",
+            "php": "php", "swift": "swift", "kotlin": "kotlin",
+            "typescript": "typescript", "ts": "typescript",
+            "html": "html", "css": "css", "sql": "sql", "bash": "bash",
+            "shell": "bash", "powershell": "powershell", "perl": "perl",
+            "lua": "lua", "r": "r", "matlab": "matlab", "dart": "dart",
+            "elixir": "elixir", "erlang": "erlang", "haskell": "haskell",
+            "clojure": "clojure", "scala": "scala", "groovy": "groovy",
+            "objectivec": "objective-c", "swift": "swift",
+        }
+        for tag in tags:
+            tag_norm = tag.lower().strip()
+            if tag_norm in tag_lang_map:
+                return tag_lang_map[tag_norm]
+            parts = re.split(r'[-._]', tag_norm)
+            for part in parts:
+                if part in tag_lang_map:
+                    return tag_lang_map[part]
+        return ""
 
     def normalize_text(self, text: str) -> str:
         text = re.sub(r"\n{3,}", "\n\n", text)
