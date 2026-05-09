@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useLayoutEffect, useRef, useState} from "react";
 import Image from "next/image";
 import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-holder";
 import {AnswerListProps, AnswerType} from "@/app/questions/types";
@@ -21,8 +21,10 @@ export default function AnswerList({
     onAnswerAccepted,
 }: AnswerListProps) {
     const [animatedAnswerId, setAnimatedAnswerId] = useState<number | null>(null);
+    const handledHashRef = useRef<string | null>(null);
+    const isFirstHashHandleRef = useRef(true);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const parseHashAnswerId = () => {
             if (typeof window === "undefined") return null;
             const match = window.location.hash.match(/^#answer-(\d+)$/);
@@ -30,23 +32,47 @@ export default function AnswerList({
             return Number.parseInt(match[1], 10);
         };
 
-        const focusAnswerByHash = () => {
+        const focusAnswerByHash = (scrollManually: boolean) => {
+            const rawHash = typeof window !== "undefined" ? window.location.hash : "";
+            if (!rawHash) return;
+            if (handledHashRef.current === rawHash) return;
             const answerId = parseHashAnswerId();
             if (!answerId) return;
             const el = document.getElementById(`answer-${answerId}`);
             if (!el) return;
-            const top = el.getBoundingClientRect().top + window.scrollY;
-            window.scrollTo({top, behavior: "smooth"});
-            window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-            setAnimatedAnswerId(answerId);
+            handledHashRef.current = rawHash;
+            const runHighlight = () => {
+                setAnimatedAnswerId(answerId);
+                window.setTimeout(() => {
+                    setAnimatedAnswerId((prev) => (prev === answerId ? null : prev));
+                }, 1000);
+            };
+
+            if (scrollManually) {
+                window.requestAnimationFrame(() => {
+                    el.scrollIntoView({behavior: "auto", block: "start"});
+                    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+                    runHighlight();
+                });
+                return;
+            }
+
+            window.scrollTo(0, 0);
             window.setTimeout(() => {
-                setAnimatedAnswerId((prev) => (prev === answerId ? null : prev));
-            }, 1000);
+                el.scrollIntoView({behavior: "smooth", block: "start"});
+                window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+                runHighlight();
+            }, 80);
         };
 
-        focusAnswerByHash();
-        window.addEventListener("hashchange", focusAnswerByHash);
-        return () => window.removeEventListener("hashchange", focusAnswerByHash);
+        focusAnswerByHash(false);
+        isFirstHashHandleRef.current = false;
+
+        const onHashChange = () => {
+            focusAnswerByHash(!isFirstHashHandleRef.current);
+        };
+        window.addEventListener("hashchange", onHashChange);
+        return () => window.removeEventListener("hashchange", onHashChange);
     }, [answers]);
 
     if (!answers.length) return null;
