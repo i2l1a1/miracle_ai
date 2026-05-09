@@ -17,12 +17,14 @@ export default function Question({
     showTopBorder = false,
     showOwnerMenu = false,
     onQuestionDeleted,
+    answersSummaryText,
 }: {
     question: HomePageQuestionProps;
     mode: QuestionMode;
     showTopBorder?: boolean;
     showOwnerMenu?: boolean;
     onQuestionDeleted?: () => void;
+    answersSummaryText?: string;
 }) {
 
     const questionTitleForView =
@@ -50,6 +52,12 @@ export default function Question({
             />
         ) : null;
 
+    const resolvedAnswersSummaryText =
+        answersSummaryText ??
+        (question.answers_count === 0
+            ? "Есть только ИИ-ответ"
+            : `${question.answers_count} ${pluralRu(question.answers_count, "ответ", "ответа", "ответов")} + ИИ`);
+
     const bodyBlock = (
         <div className="flex flex-col px-2">
             <div>
@@ -67,9 +75,7 @@ export default function Question({
             <div className="flex justify-between gap-2 mt-[20px]">
                 <p className="text-gray-text">{formattedDateAdded}</p>
                 <p className="text-gray-text">
-                    {question.answers_count === 0
-                      ? "Есть только ИИ-ответ"
-                      : `${question.answers_count} ${pluralRu(question.answers_count, "ответ", "ответа", "ответов")} + ИИ`}
+                    {resolvedAnswersSummaryText}
                 </p>
             </div>
         </div>

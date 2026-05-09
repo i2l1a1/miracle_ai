@@ -14,6 +14,7 @@ import {AnswerType, QuestionDetailContentProps} from "@/app/questions/types";
 import {fetchData, generateAiAnswer, startPollingQuestionAnswers} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import type {GenerateAiAnswerResponse} from "@/lib/dataService";
+import {pluralRu} from "@/lib/pluralize";
 
 const aiAnswerInflight = new Map<number, Promise<GenerateAiAnswerResponse>>();
 
@@ -89,6 +90,11 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
 
     const hasGeneratingBot = answers.some((a) => a.is_bot && a.status === "generating");
     const showAiAnswerLoader = aiLoading || hasGeneratingBot;
+    const answersSummaryText = hasGeneratingBot
+        ? "Ответ от ИИ генерируется"
+        : question.answers_count === 0
+            ? "Есть только ИИ-ответ"
+            : `${question.answers_count} ${pluralRu(question.answers_count, "ответ", "ответа", "ответов")} + ИИ`;
 
     useEffect(() => {
         if (!question.id || !hasGeneratingBot) return;
@@ -126,6 +132,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
                 mode={QuestionMode.QUESTION_INNER}
                 showOwnerMenu={userId != null && question.user_id === userId}
                 onQuestionDeleted={() => router.push("/home")}
+                answersSummaryText={answersSummaryText}
             />
             <div className="border-t border-b border-separator py-6">
                 <h2 className="text-block-header text-gray-text mb-5">Ваш ответ</h2>
