@@ -1,6 +1,6 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import Image from "next/image";
 import AvatarAndUsernameHolder from "@/components/holders/avatar-and-username-holder";
 import {AnswerListProps, AnswerType} from "@/app/questions/types";
@@ -20,6 +20,35 @@ export default function AnswerList({
     onAnswerDeleted,
     onAnswerAccepted,
 }: AnswerListProps) {
+    const [animatedAnswerId, setAnimatedAnswerId] = useState<number | null>(null);
+
+    useEffect(() => {
+        const parseHashAnswerId = () => {
+            if (typeof window === "undefined") return null;
+            const match = window.location.hash.match(/^#answer-(\d+)$/);
+            if (!match) return null;
+            return Number.parseInt(match[1], 10);
+        };
+
+        const focusAnswerByHash = () => {
+            const answerId = parseHashAnswerId();
+            if (!answerId) return;
+            const el = document.getElementById(`answer-${answerId}`);
+            if (!el) return;
+            const top = el.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({top, behavior: "smooth"});
+            window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+            setAnimatedAnswerId(answerId);
+            window.setTimeout(() => {
+                setAnimatedAnswerId((prev) => (prev === answerId ? null : prev));
+            }, 1000);
+        };
+
+        focusAnswerByHash();
+        window.addEventListener("hashchange", focusAnswerByHash);
+        return () => window.removeEventListener("hashchange", focusAnswerByHash);
+    }, [answers]);
+
     if (!answers.length) return null;
     return (
         <div>
@@ -33,6 +62,7 @@ export default function AnswerList({
                     onAuthRequiredAction={onAuthRequiredAction}
                     onAnswerDeleted={onAnswerDeleted}
                     onAnswerAccepted={onAnswerAccepted}
+                    animateText={animatedAnswerId != null && answer.id === animatedAnswerId}
                 />
             ))}
         </div>
@@ -47,6 +77,7 @@ function AnswerItem({
     onAuthRequiredAction,
     onAnswerDeleted,
     onAnswerAccepted,
+    animateText = false,
 }: {
     answer: AnswerType;
     questionOwnerId: number;
@@ -55,6 +86,7 @@ function AnswerItem({
     onAuthRequiredAction: () => void;
     onAnswerDeleted: (answerId: number) => void;
     onAnswerAccepted: (answerId: number | null) => void;
+    animateText?: boolean;
 }) {
     const {userId} = useAuth();
     const [loading, setLoading] = useState(false);
@@ -145,7 +177,10 @@ function AnswerItem({
                 </div>
             </div>
             <div className="mt-5">
-                <RichText text={answer.text} className="text-text"/>
+                <RichText
+                    text={answer.text}
+                    className={`transition-colors duration-1000 ${animateText ? "text-dark-gray-text" : "text-text"}`}
+                />
             </div>
             <div className="flex items-center justify-between gap-2 mt-4">
                 <div className="flex items-center gap-2">
