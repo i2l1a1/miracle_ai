@@ -189,30 +189,9 @@ async def delete_account(
 
 
 @auth_router.post("/logout")
-async def logout(response: Response, db: AsyncSession = Depends(get_db), refresh_token_from_cookie: str | None = Depends(OAuth2PasswordBearerWithCookie(tokenUrl="/token", cookie_name="refresh_token", auto_error=False))):
+async def logout(response: Response):
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
-
-    if refresh_token_from_cookie:
-        try:
-            payload = jwt.decode(refresh_token_from_cookie, SECRET_KEY, algorithms=[ALGORITHM])
-            user_id_str: str | None = payload.get("sub")
-            if user_id_str:
-                user_id = int(user_id_str)
-                stmt = select(RefreshTokenDBModel).where(
-                    RefreshTokenDBModel.user_id == user_id,
-                    RefreshTokenDBModel.revoked_at == None
-                )
-                refresh_tokens = (await db.execute(stmt)).scalars().all()
-                for token_db in refresh_tokens:
-                    if verify_token_hash(refresh_token_from_cookie, token_db.token):
-                        token_db.revoked_at = datetime.now(timezone.utc)
-                        await db.flush()
-                        break
-                await db.commit()
-        except JWTError:
-            pass
-
     return {"message": "Logged out successfully"}
 
 

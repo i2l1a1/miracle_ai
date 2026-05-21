@@ -29,23 +29,14 @@ export default function AccountMenu({onClose, triggerRef}: {
         document.addEventListener("mousedown", handleClickOutside);
     }, [menuRef, triggerRef, onClose]);
 
-    const handleLogout = async () => {
-        try {
-            const response = await fetch(`${CLIENT_API_URL}/logout`, {
-                method: "POST",
-                credentials: "include",
-            });
-
-            if (response.ok) {
-                resetAuth();
-                onClose();
-                router.push("/home");
-            } else {
-                console.error("Logout failed!");
-            }
-        } catch (error) {
-            console.error("Error during logout:", error);
-        }
+    const handleLogout = () => {
+        resetAuth();
+        onClose();
+        router.push("/home");
+        fetch(`${CLIENT_API_URL}/logout`, {
+            method: "POST",
+            credentials: "include",
+        }).catch((error) => console.error("Error during logout:", error));
     };
 
     return (
