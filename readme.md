@@ -1,6 +1,6 @@
 # Miracle AI
 
-<img src="Screenshots/miracle-ai-main-screen.png" width="350" />
+<img src="Screenshots/miracle-ai-main-screen.png" />
 
 Try it now: [miracle-ai.ru](https://miracle-ai.ru)
 
