@@ -10,6 +10,7 @@ import DeleteOverflowMenu from "@/components/menus/delete-overflow-menu";
 import {useAuth} from "@/context/AuthContext";
 import {acceptAnswer, deleteAnswer, unacceptAnswer, voteAnswer} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
+import ClientDateTime from "@/components/ClientDateTime";
 import RichText from "@/components/text/rich-text";
 
 export default function AnswerList({
@@ -119,12 +120,6 @@ function AnswerItem({
     const currentVote = answer.current_vote ?? null;
     const aid = answer.id;
 
-    const formattedDate = new Intl.DateTimeFormat("en-US", {
-        dateStyle: "short",
-        timeStyle: "short",
-        timeZone: "UTC",
-    }).format(new Date(answer.date_added));
-
     const handleVote = async (voteType: number) => {
         if (!userId) {
             onAuthRequiredAction();
@@ -230,7 +225,7 @@ function AnswerItem({
                         <Image src={voteDownIcon} alt="Vote down" width={24} height={24}/>
                     </button>
                 </div>
-                <p className="text-gray-text">{formattedDate}</p>
+                <ClientDateTime iso={answer.date_added} className="text-gray-text" />
             </div>
         </div>
     );

@@ -67,9 +67,7 @@ async def get_questions_paginated_crud(
             .limit(page_size)
         )
         questions = result.scalars().all()
-        serialized = [
-            QuestionSchema.model_validate(q).model_dump(mode="json") for q in questions
-        ]
+        serialized = await _serialize_questions_with_ai_flags(db, questions)
         total_pages = (total + page_size - 1) // page_size if total > 0 else 0
         return {
             "is_ok": True,
@@ -102,9 +100,7 @@ async def get_questions_by_user_id_crud(user_id: int, page: int, page_size: int)
             .limit(page_size)
         )
         questions = result.scalars().all()
-        serialized = [
-            QuestionSchema.model_validate(q).model_dump(mode="json") for q in questions
-        ]
+        serialized = await _serialize_questions_with_ai_flags(db, questions)
         total_pages = (total + page_size - 1) // page_size if total > 0 else 0
         return {
             "is_ok": True,
@@ -114,6 +110,33 @@ async def get_questions_by_user_id_crud(user_id: int, page: int, page_size: int)
             "page_size": page_size,
             "total_pages": total_pages,
         }
+
+
+async def _ai_generating_question_ids(db, question_ids: list[int]) -> set[int]:
+    if not question_ids:
+        return set()
+    result = await db.execute(
+        select(AnswerDBModel.question_id).where(
+            AnswerDBModel.question_id.in_(question_ids),
+            AnswerDBModel.is_bot.is_(True),
+            AnswerDBModel.is_deleted.is_(False),
+            AnswerDBModel.status == "generating",
+        ).distinct()
+    )
+    return set(result.scalars().all())
+
+
+async def _serialize_questions_with_ai_flags(
+    db, questions: list[QuestionDBModel]
+) -> list[dict]:
+    ids = [q.id for q in questions if q.id is not None]
+    generating_ids = await _ai_generating_question_ids(db, ids)
+    out: list[dict] = []
+    for q in questions:
+        d = QuestionSchema.model_validate(q).model_dump(mode="json")
+        d["ai_generating"] = q.id in generating_ids
+        out.append(d)
+    return out
 
 
 def _normalize_question_tags(raw: Optional[List[str]]) -> List[str]:
@@ -129,7 +152,7 @@ def _normalize_question_tags(raw: Optional[List[str]]) -> List[str]:
 
 async def add_new_question_crud(question: QuestionSchema):
     async with SessionLocal() as db:
-        payload = question.model_dump(exclude={"tags"})
+        payload = question.model_dump(exclude={"tags", "ai_generating"})
         if payload.get("id") is None:
             payload.pop("id", None)
         new_question = QuestionDBModel(**payload)

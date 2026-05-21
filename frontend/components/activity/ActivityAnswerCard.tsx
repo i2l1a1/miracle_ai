@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MultilineText from "@/components/text/multiline-text";
+import ClientDateTime from "@/components/ClientDateTime";
 import {truncateText} from "@/lib/textTruncation";
 
 export type ActivityAnswerItem = {
@@ -20,12 +21,6 @@ export default function ActivityAnswerCard({
     item: ActivityAnswerItem;
     showTopBorder: boolean;
 }) {
-    const formattedDate = new Intl.DateTimeFormat("en-US", {
-        dateStyle: "short",
-        timeStyle: "short",
-        timeZone: "UTC",
-    }).format(new Date(item.date_added));
-
     return (
         <Link href={`/questions/${item.question_id}`} className="block">
             <div
@@ -39,8 +34,8 @@ export default function ActivityAnswerCard({
                     />
                     <MultilineText text={truncateText(item.text)} className="text-text"/>
                     <div className="flex justify-between gap-2">
-                        <p className="text-gray-text">{formattedDate}</p>
-                        <p className="text-gray-text">Rating: {item.rating}</p>
+                        <ClientDateTime iso={item.date_added} className="text-gray-text" />
+                        <p className="text-gray-text">Рейтинг: {item.rating}</p>
                     </div>
                 </div>
             </div>

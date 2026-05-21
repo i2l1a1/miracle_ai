@@ -26,10 +26,12 @@ export default function HomeQuestionsClient() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const everLoadedRef = useRef(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     const firstLoad = !everLoadedRef.current;
-    if (firstLoad) setInitialLoading(true);
-    else setRefreshing(true);
+    if (!silent) {
+      if (firstLoad) setInitialLoading(true);
+      else setRefreshing(true);
+    }
     setLoadError(null);
     try {
       const data = await fetchHomeQuestions(CLIENT_API_URL, {
@@ -44,14 +46,26 @@ export default function HomeQuestionsClient() {
       setLoadError(e instanceof Error ? e.message : "Failed to load");
       if (firstLoad) setPayload(null);
     } finally {
-      setInitialLoading(false);
-      setRefreshing(false);
+      if (!silent) {
+        setInitialLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [page, appliedFilter]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const hasAiGenerating = (payload?.questions ?? []).some((q) => q.ai_generating);
+
+  useEffect(() => {
+    if (!hasAiGenerating) return;
+    const id = setInterval(() => {
+      void load(true);
+    }, 2000);
+    return () => clearInterval(id);
+  }, [hasAiGenerating, load]);
 
   useEffect(() => {
     if (!payload) return;

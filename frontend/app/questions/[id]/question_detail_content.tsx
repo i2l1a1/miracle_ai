@@ -14,7 +14,7 @@ import {AnswerType, QuestionDetailContentProps} from "@/app/questions/types";
 import {fetchData, generateAiAnswer, startPollingQuestionAnswers} from "@/lib/dataService";
 import {CLIENT_API_URL} from "@/lib/apiConfig";
 import type {GenerateAiAnswerResponse} from "@/lib/dataService";
-import {pluralRu} from "@/lib/pluralize";
+import {questionAnswersSummaryText} from "@/lib/questionAnswersSummary";
 
 const aiAnswerInflight = new Map<number, Promise<GenerateAiAnswerResponse>>();
 
@@ -91,11 +91,10 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
     const hasGeneratingBot = answers.some((a) => a.is_bot && a.status === "generating");
     const isAiGenerating = aiLoading || hasGeneratingBot;
     const showAiAnswerLoader = isAiGenerating;
-    const answersSummaryText = isAiGenerating
-        ? "Ответ от ИИ генерируется"
-        : question.answers_count === 0
-            ? "Есть только ИИ-ответ"
-            : `${question.answers_count} ${pluralRu(question.answers_count, "ответ", "ответа", "ответов")} + ИИ`;
+    const answersSummaryText = questionAnswersSummaryText(
+        question.answers_count,
+        isAiGenerating
+    );
 
     useEffect(() => {
         if (!question.id || !isAiGenerating) return;

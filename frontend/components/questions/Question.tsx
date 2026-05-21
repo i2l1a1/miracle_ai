@@ -1,5 +1,6 @@
 import {HomePageQuestionProps} from "@/app/home/types";
-import {pluralRu} from "@/lib/pluralize";
+import ClientDateTime from "@/components/ClientDateTime";
+import {questionAnswersSummaryText} from "@/lib/questionAnswersSummary";
 import Tag from "@/components/tags/Tag";
 import {QuestionMode} from "@/global_types/types";
 import Link from "next/link";
@@ -42,12 +43,6 @@ export default function Question({
             ? truncateText(question.text)
             : question.text;
 
-    const formattedDateAdded = new Intl.DateTimeFormat("en-US", {
-        dateStyle: "short",
-        timeStyle: "short",
-        timeZone: "UTC",
-    }).format(new Date(question.date_added));
-
     const menu = (
         <DeleteOverflowMenu
             ariaLabel="Question actions"
@@ -59,9 +54,7 @@ export default function Question({
 
     const resolvedAnswersSummaryText =
         answersSummaryText ??
-        (question.answers_count === 0
-            ? "Есть только ИИ-ответ"
-            : `${question.answers_count} ${pluralRu(question.answers_count, "ответ", "ответа", "ответов")} + ИИ`);
+        questionAnswersSummaryText(question.answers_count, question.ai_generating);
 
     const bodyBlock = (
         <div className="flex flex-col px-2">
@@ -78,7 +71,7 @@ export default function Question({
                 </div>
             </div>
             <div className="flex justify-between gap-2 mt-[20px]">
-                <p className="text-gray-text">{formattedDateAdded}</p>
+                <ClientDateTime iso={question.date_added} className="text-gray-text" />
                 <p className="text-gray-text">
                     {resolvedAnswersSummaryText}
                 </p>

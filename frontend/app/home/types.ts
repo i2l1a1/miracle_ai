@@ -8,4 +8,5 @@ export type HomePageQuestionProps = {
     tags: string[];
     answers_count: number;
     status: string;
+    ai_generating?: boolean;
 };
