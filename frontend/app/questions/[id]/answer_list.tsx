@@ -178,7 +178,7 @@ function AnswerItem({
                     )}
                     {!answer.is_accepted && answer.rating <= -3 && (
                         <span className="text-danger-color text-button-text font-bold">
-                            Possibly incorrect
+                            Скорее всего неверный
                         </span>
                     )}
                     {aid != null && (

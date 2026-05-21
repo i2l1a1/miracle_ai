@@ -89,17 +89,18 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
     }, [loading, userId, question.id, question.user_id]);
 
     const hasGeneratingBot = answers.some((a) => a.is_bot && a.status === "generating");
-    const showAiAnswerLoader = aiLoading || hasGeneratingBot;
-    const answersSummaryText = hasGeneratingBot
+    const isAiGenerating = aiLoading || hasGeneratingBot;
+    const showAiAnswerLoader = isAiGenerating;
+    const answersSummaryText = isAiGenerating
         ? "Ответ от ИИ генерируется"
         : question.answers_count === 0
             ? "Есть только ИИ-ответ"
             : `${question.answers_count} ${pluralRu(question.answers_count, "ответ", "ответа", "ответов")} + ИИ`;
 
     useEffect(() => {
-        if (!question.id || !hasGeneratingBot) return;
+        if (!question.id || !isAiGenerating) return;
         return startPollingQuestionAnswers(question.id, CLIENT_API_URL, setAnswers);
-    }, [question.id, hasGeneratingBot]);
+    }, [question.id, isAiGenerating]);
 
     const answersForList = answers.filter((a) => !(a.is_bot && a.status === "generating"));
 
@@ -144,7 +145,7 @@ export default function QuestionDetailContent({question, initialAnswers}: Questi
             </div>
             {showAiAnswerLoader && (
                 <div className="border-t border-separator py-6">
-                    <p className="text-gray-text">Загрузка...</p>
+                    <p className="text-gray-text">Ответ от ИИ генерируется...</p>
                 </div>
             )}
             <AnswerList
