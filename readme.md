@@ -32,6 +32,11 @@ forums, many questions stay without a useful reply for days or weeks. Visitors l
 waiting. Importing questions from Stack Overflow solves this problem by giving those questions an immediate AI response
 on Miracle AI.
 
+To start parsing, execute (for project administrators only):
+```
+docker compose -f docker-compose.prod.yml exec sever python parsing/run_stackoverflow_publisher.py --url http://localhost:8080 --fromdate "YYYY-MM-DD HH:MM:SS" --todate "YYYY-MM-DD HH:MM:SS" --workers 20
+```
+
 ## Installation and Setup
 
 ### On a production server
