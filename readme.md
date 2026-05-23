@@ -63,6 +63,16 @@ Then try visiting:
 - Frontend: [http://localhost:3000](http://localhost:3000)
 - API: [http://localhost:8080](http://localhost:8080/docs)
 
+### Testing
+
+Backend tests are located in `backend/tests/` (unit tests, API integration tests, and a real LLM integration test).
+
+To run all tests, execute:
+
+```
+docker compose -f docker-compose.dev.yml exec sever pytest -v
+```
+
 ## Tech stack
 
 ### Backend
