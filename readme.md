@@ -88,6 +88,7 @@ docker compose -f docker-compose.dev.yml exec sever pytest -v
 * **langdetect** — question language detection
 * **BeautifulSoup**, **Pygments** — HTML parsing, syntax hints
 * **python-dotenv** — configuration
+* **pytest** + **pytest-asyncio** — test runner and async tests
 
 ### Frontend
 
