@@ -1,6 +1,9 @@
+import os
+import time
+import logging
+
 from asyncio import Lock
 import asyncio
-import os
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -31,8 +34,10 @@ from schemas.pydantic_schemas import (
 )
 from security.authSecurity import get_current_user, get_current_user_optional
 from database.data_base_models import User
+from core.log_context import user_id_var
 
 router = APIRouter()
+logger = logging.getLogger("miracle.api")
 
 _generate_ai_locks: dict[int, Lock] = {}
 
@@ -94,7 +99,9 @@ async def add_new_question(
 ):
     question.user_id = current_user.id
     question.username = current_user.username
-    return await add_new_question_crud(question)
+    result = await add_new_question_crud(question)
+    logger.info(f"Question created question_id={result.get('id')}")
+    return result
 
 
 @router.delete("/delete_question/{question_id}")
@@ -145,7 +152,13 @@ async def add_answer(
 ):
     payload.user_id = current_user.id
     payload.username = current_user.username
-    return await add_answer_crud(payload)
+    result = await add_answer_crud(payload)
+    if result.get("is_ok"):
+        logger.info(
+            f"Answer created question_id={payload.question_id} "
+            f"answer_id={result.get('id')} is_bot={payload.is_bot}"
+        )
+    return result
 
 
 @router.post("/vote_answer")
@@ -199,8 +212,10 @@ async def unaccept_answer(
 async def generate_ai_answer(
     question_id: int,
 ):
+    logger.info(f"AI generation requested question_id={question_id}")
     data = await get_question_crud(question_id, None)
     if not data["is_ok"]:
+        logger.warning(f"AI generation question not found question_id={question_id}")
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail=data.get("message", "Question not found"),
@@ -209,6 +224,7 @@ async def generate_ai_answer(
 
     existing = await get_ai_answer_if_exists_crud(question_id)
     if existing:
+        logger.info(f"AI generation cache hit question_id={question_id}")
         return {
             "is_ok": True,
             "created": False,
@@ -218,6 +234,9 @@ async def generate_ai_answer(
     async with _generate_ai_lock(question_id):
         row = await get_bot_answer_row_after_lock_crud(question_id)
         if row and row.status in {"posted", "generating"}:
+            logger.info(
+                f"AI generation already in progress or done question_id={question_id} status={row.status}"
+            )
             return {
                 "is_ok": True,
                 "created": False,
@@ -226,11 +245,15 @@ async def generate_ai_answer(
 
         reserved = await create_or_get_generating_ai_answer_crud(question_id, q.user_id)
         if not reserved.get("is_ok"):
+            logger.error(
+                f"AI generation reserve failed question_id={question_id} message={reserved.get('message')}"
+            )
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
                 detail=reserved.get("message", "Failed to reserve AI generation"),
             )
         if not reserved.get("created"):
+            logger.info(f"AI generation reserved by concurrent request question_id={question_id}")
             return {
                 "is_ok": True,
                 "created": False,

@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from core.request_logging import RequestLogMiddleware
 from init_server.lifespan import lifespan
 from routers.auth_routers import auth_router
 from routers.routers import router
@@ -21,6 +22,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RequestLogMiddleware)
 
 app.include_router(router)
 app.include_router(auth_router)

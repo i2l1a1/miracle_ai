@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException, status, APIRouter
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt, JWTError
@@ -7,6 +8,7 @@ from database.auth_crud import authenticate_user_from_db, get_user_by_username_f
 from database.data_base_models import User, QuestionDBModel, AnswerDBModel, RefreshTokenDBModel
 from schemas.pydantic_schemas import UserCreateSchema, UserUpdateSchema, TokenRefreshRequest
 from security.cookie import OAuth2PasswordBearerWithCookie
+from core.log_context import user_id_var
 from security.authSecurity import (
     get_current_user,
     create_access_token,
@@ -24,14 +26,17 @@ from datetime import timedelta, datetime, timezone
 from sqlalchemy import update, select
 
 auth_router = APIRouter()
+logger = logging.getLogger("miracle.auth")
 
 
 @auth_router.post("/register")
 async def register_user(user: UserCreateSchema, db: AsyncSession = Depends(get_db)):
     db_user = await get_user_by_username_from_db(db, username=user.username)
     if db_user:
+        logger.warning(f"Registration failed username={user.username} reason=already_registered")
         raise HTTPException(status_code=400, detail="Username already registered")
     await create_user_in_db(db=db, user=user)
+    logger.info(f"User registered username={user.username}")
     return {"message": "User registered successfully"}
 
 
@@ -43,6 +48,7 @@ async def login_for_access_token(
 ):
     user = await authenticate_user_from_db(form_data.username, form_data.password, db)
     if not user:
+        logger.warning(f"Login failed username={form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Некорректное имя пользователя или пароль",
@@ -84,6 +90,8 @@ async def login_for_access_token(
                         max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
                         samesite="lax")
 
+    user_id_var.set(str(user_id_to_return))
+    logger.info(f"User logged in username={username_to_return}")
     return {"message": "Logged in successfully", "username": username_to_return, "user_id": user_id_to_return}
 
 
@@ -119,6 +127,9 @@ async def update_me(
     if username_changed:
         existing = await get_user_by_username_from_db(db, username=payload.username)
         if existing:
+            logger.warning(
+                f"Profile update failed reason=username_taken new_username={payload.username}"
+            )
             raise HTTPException(status_code=400, detail="Username already registered")
         current_user.username = payload.username
         await db.flush()
@@ -145,6 +156,9 @@ async def update_me(
     if username_changed or language_changed:
         await db.commit()
         await db.refresh(current_user)
+        logger.info(
+            f"Profile updated username_changed={username_changed} language_changed={language_changed}"
+        )
 
     return {
         "username": current_user.username,
@@ -185,6 +199,7 @@ async def delete_account(
     response.delete_cookie(key="refresh_token")
     
     await db.commit()
+    logger.info("Account deleted")
     return {"message": "Account deleted"}
 
 
@@ -192,6 +207,7 @@ async def delete_account(
 async def logout(response: Response):
     response.delete_cookie(key="access_token")
     response.delete_cookie(key="refresh_token")
+    logger.info("User logged out")
     return {"message": "Logged out successfully"}
 
 
@@ -202,15 +218,18 @@ async def refresh_token(
     refresh_token_from_cookie: str | None = Depends(OAuth2PasswordBearerWithCookie(tokenUrl="/token", cookie_name="refresh_token", auto_error=False))
 ):
     if not refresh_token_from_cookie:
+        logger.warning("Token refresh failed reason=missing_cookie")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing")
 
     try:
         payload = jwt.decode(refresh_token_from_cookie, SECRET_KEY, algorithms=[ALGORITHM])
         user_id_str: str | None = payload.get("sub")
         if user_id_str is None:
+            logger.warning("Token refresh failed reason=invalid_payload")
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token payload")
         user_id = int(user_id_str)
     except JWTError:
+        logger.warning("Token refresh failed reason=invalid_jwt")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
     db_refresh_tokens_stmt = select(RefreshTokenDBModel).where(
@@ -227,6 +246,7 @@ async def refresh_token(
             break
 
     if not db_refresh_token:
+        logger.warning("Token refresh failed reason=invalid_or_expired")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
 
     db_refresh_token.revoked_at = datetime.now(timezone.utc)
@@ -264,4 +284,5 @@ async def refresh_token(
                         max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
                         samesite="lax")
 
+    logger.info("Tokens refreshed")
     return {"message": "Tokens refreshed successfully", "user_id": user_id}

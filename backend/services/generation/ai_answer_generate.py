@@ -4,6 +4,9 @@ from services.generation.ai_answer_generate_advice import generate_answer_text a
 from services.generation.ai_answer_generate_tutorial import generate_answer_text as tutorial_generate
 from services.generation.ai_answer_generate_current import generate_answer_text as current_generate
 from services.generation.ai_answer_generate_creative import generate_answer_text as creative_generate
+import logging
+
+logger = logging.getLogger("miracle.generation")
 
 
 async def generate_answer_text(question_title: str, question_text: str) -> str:
@@ -14,7 +17,7 @@ async def generate_answer_text(question_title: str, question_text: str) -> str:
     if confidence < 0.6:
         q_type = "advice"
 
-    print(f"Question type: {q_type}")
+    logger.info(f"Question classified type={q_type} confidence={confidence}")
     if q_type == "technical":
         return await technical_generate(question_title, question_text)
     elif q_type == "tutorial":

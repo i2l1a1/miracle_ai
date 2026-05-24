@@ -2,6 +2,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from services.generation.build_chat import _build_chat, safe_ainvoke
 from services.generation.code_generation import _CODE_BLOCK_RULES, _normalize_fenced_code_openings
 from services.generation.classify_question import detect_question_language
+from services.generation.generation_log import log_pipeline_step
 
 
 async def generate_answer_text(question_title: str, question_text: str) -> str:
@@ -30,7 +31,7 @@ Facts and steps:
     )
     step1_messages = [step1_system, step1_user]
     step1_result = (await safe_ainvoke(chat, step1_messages)).content
-    print("=== [Tutorial] Step 1 (Facts and steps) ===\n", step1_result, "\n")
+    log_pipeline_step("Tutorial", 1, "Facts and steps", step1_result)
 
     step2_system = SystemMessage(
         content=(
@@ -64,7 +65,7 @@ Answer:"""
     )
     step2_messages = [step2_system, step2_user]
     step2_result = (await safe_ainvoke(chat, step2_messages)).content
-    print("=== [Tutorial] Step 2 (Draft) ===\n", step2_result, "\n")
+    log_pipeline_step("Tutorial", 2, "Draft", step2_result)
 
     step3_system = SystemMessage(
         content=(
@@ -95,6 +96,6 @@ Corrected answer:"""
     )
     step3_messages = [step3_system, step3_user]
     step3_result = (await safe_ainvoke(chat, step3_messages)).content
-    print("=== [Tutorial] Step 3 (Final answer) ===\n", step3_result, "\n")
+    log_pipeline_step("Tutorial", 3, "Final answer", step3_result)
 
     return _normalize_fenced_code_openings(step3_result)

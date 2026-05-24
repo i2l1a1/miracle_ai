@@ -32,6 +32,8 @@ frontend/next-env.d.ts
 
 backend/.venv
 backend/__pycache__/
+backend/logs/*
+!backend/logs/.gitkeep
 
 # General
 

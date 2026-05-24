@@ -1,8 +1,11 @@
 import json
+import logging
 from langchain_core.messages import HumanMessage, SystemMessage
 from langdetect import detect
 
 from services.generation.build_chat import _build_chat
+
+logger = logging.getLogger("miracle.generation")
 
 
 async def classify_question(question_title: str, question_text: str) -> dict:
@@ -47,6 +50,7 @@ Determine the question type and confidence in JSON format."""
     try:
         result = json.loads(response)
     except json.JSONDecodeError:
+        logger.warning("Classifier returned invalid JSON; using fallback parsing")
         result = {"type": "advice", "confidence": 0.5}
         for t in ["technical", "advice", "tutorial", "current", "creative"]:
             if t in response.lower():
