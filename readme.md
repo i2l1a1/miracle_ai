@@ -78,6 +78,20 @@ To run all tests, execute:
 docker compose -f docker-compose.dev.yml exec sever pytest -v
 ```
 
+### Logging
+
+To view logs, execute:
+
+```
+docker compose -f docker-compose.prod.yml logs sever
+```
+
+Or follow logs in real time:
+
+```
+docker compose -f docker-compose.prod.yml logs sever -f
+```
+
 ## Tech stack
 
 ### Backend
